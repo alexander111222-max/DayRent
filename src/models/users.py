@@ -15,5 +15,6 @@ class UsersOrm(Base):
     email: Mapped[str]
     city: Mapped[str]
     address: Mapped[str]
+    hash_password: Mapped[str]
     lat: Mapped[Decimal]
     lon: Mapped[Decimal]

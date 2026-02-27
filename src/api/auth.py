@@ -1,0 +1,38 @@
+from fastapi import APIRouter, HTTPException
+from fastapi import Response
+
+from src.api.dependencies import DBDep
+from src.schemas.users import UserAddRequestSchema, UserSchema, UserAddSchema, UserLoginSchema
+from src.services.users import UserService
+from src.services.auth import AuthService
+from src.utils.exceptions import UserLoginException
+
+router = APIRouter(prefix="/auth")
+
+@router.post("/register")
+async def register(data: UserAddRequestSchema, db: DBDep):
+
+    added_user = await AuthService(db).register_user(data)
+
+    return {"added_user": added_user}
+
+
+@router.post("/login")
+async def login(data: UserLoginSchema, response: Response, db: DBDep):
+
+    try:
+        access_token = await AuthService(db).login_user(data)
+
+    except UserLoginException:
+        raise HTTPException(status_code=400, detail="Пользователь не найден или неверный пароль")
+
+    response.set_cookie("access_token", access_token)
+
+    return {"Login": "Ok"}
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    response.delete_cookie("access_token")
+    return {"Logout":"Ok"}
+

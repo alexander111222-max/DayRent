@@ -1,20 +1,26 @@
 
+from fastapi import APIRouter, HTTPException
 
-
-from fastapi import APIRouter
 
 from src.api.dependencies import DBDep
-from src.schemas.users import UserAddRequestSchema
 from src.services.users import UserService
+from src.utils.exceptions import UserNotFoundException
+
+
 
 router = APIRouter(prefix="/user")
 
+@router.get("/{user_id}")
+async def get_user(db: DBDep, user_id: int):
+    try:
+        user = await UserService(db).get_user(id=user_id)
+    except UserNotFoundException:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    return user
 
-@router.post("/add")
-async def add_user(data: UserAddRequestSchema, db: DBDep):
 
-    added_user = await UserService(db).add_one(data)
 
-    return {"added_user": added_user}
+
+
 
 
