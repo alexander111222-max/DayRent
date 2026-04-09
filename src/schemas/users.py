@@ -12,8 +12,8 @@ class UserSchema(BaseModel):
     email: EmailStr
     city: str
     address: str
-    lat: Decimal
-    lon: Decimal
+    lat: Decimal | None
+    lon: Decimal | None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -58,3 +58,7 @@ class UserSchemaWithHashPass(BaseModel):
     lon: Decimal
 
     model_config = ConfigDict(from_attributes=True)
+
+class CoordinateUser(BaseModel):
+    lat: Decimal
+    lon: Decimal

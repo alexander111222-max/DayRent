@@ -1,5 +1,7 @@
+from typing import Optional
 
 from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy import ForeignKey, Numeric
 from datetime import date
 from src.database import Base
 from decimal import Decimal
@@ -13,8 +15,8 @@ class ItemsOrm(Base):
     description: Mapped[str]
     city: Mapped[str]
     address: Mapped[str]
-    lat: Mapped[Decimal]
-    lon: Mapped[Decimal]
-    user_id: Mapped[int] = mapped_column(foreign_key="users.id")
-    category_id: Mapped[int] = mapped_column(foreign_key="categories.id")
+    lat: Mapped[Optional[Decimal]] = mapped_column(Numeric, nullable=True)
+    lon: Mapped[Optional[Decimal]] = mapped_column(Numeric, nullable=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
     created_at: Mapped[date]

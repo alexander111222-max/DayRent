@@ -2,17 +2,18 @@ from fastapi import APIRouter, HTTPException
 from fastapi import Response
 
 from src.api.dependencies import DBDep
-from src.schemas.users import UserAddRequestSchema, UserSchema, UserAddSchema, UserLoginSchema
-from src.services.users import UserService
+from src.schemas.users import UserAddRequestSchema, UserLoginSchema
+from src.tasks.tasks import geocode_user
 from src.services.auth import AuthService
 from src.utils.exceptions import UserLoginException
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register")
 async def register(data: UserAddRequestSchema, db: DBDep):
 
     added_user = await AuthService(db).register_user(data)
+    geocode_user.delay(added_user.id, added_user.address)
 
     return {"added_user": added_user}
 

@@ -16,3 +16,13 @@ class UserNotFoundException(DayRentException):
 
 class UserLoginException(DayRentException):
     detail = "Не удалось войти"
+
+class MultipleObjectsFoundException(DayRentException):
+    detail = "Слишком много обьектов для удаления/обновления"
+
+
+class ItemNotFoundException(DayRentException):
+    detail = "Отсутствует вещь для удаления"
+
+class MultipleItemFoundException(DayRentException):
+    detail = "Слишком много вещей для удаления/обновления"

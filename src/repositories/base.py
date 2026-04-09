@@ -1,12 +1,29 @@
 from typing import Type
 
 from pydantic import BaseModel
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update, func
 from sqlalchemy.exc import NoResultFound
 
 from src.repositories.mappers.base import DataMapper
-from src.utils.exceptions import ObjectNotFoundException
+from src.utils.exceptions import ObjectNotFoundException, MultipleObjectsFoundException
 
+
+def check_single_obj(function):
+    async def wrapper(self, data, *filters, **filter_by):
+        async with self._session.begin_nested():
+            query = select(func.count()).select_from(self._model).filter_by(**filter_by)
+            result = await self._session.execute(query)
+            count = result.scalar()
+
+            if count == 0:
+                raise ObjectNotFoundException
+            if count > 1:
+                raise MultipleObjectsFoundException
+
+            result = await function(self, data, *filters, **filter_by)
+            return result
+
+    return wrapper
 
 class BaseRepository:
 
@@ -23,9 +40,9 @@ class BaseRepository:
 
         row = await self._session.execute(stmt)
         model = row.scalar_one_or_none()
-        user = self.mapper.map_to_domain_entity(model)
+        result = self.mapper.map_to_domain_entity(model)
 
-        return user
+        return result
 
     async def get_filter_by(self, *filters, **filter_by):
         query = select(self._model).filter(*filters).filter_by(**filter_by)
@@ -35,7 +52,7 @@ class BaseRepository:
         return [self.mapper.map_to_domain_entity(model) for model in (objs.scalars().all())]
 
 
-    async def get_all(self,  *filters, **filter_by):
+    async def get_all(self):
 
         result = await self.get_filter_by()
 
@@ -66,6 +83,20 @@ class BaseRepository:
             return None
 
         return self.mapper.map_to_domain_entity(model)
+
+    @check_single_obj
+    async def edit(self, data: BaseModel, *filters, **filter_by):
+
+        update_stmt = (update(self._model)
+                       .filter(*filters)
+                       .filter_by(**filter_by)
+                       .values(**data.model_dump(exclude_unset=True)))
+
+        await self._session.execute(update_stmt)
+
+
+
+
 
 
 

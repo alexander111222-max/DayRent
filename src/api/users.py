@@ -8,7 +8,7 @@ from src.utils.exceptions import UserNotFoundException
 
 
 
-router = APIRouter(prefix="/user")
+router = APIRouter(prefix="/user", tags=["users"])
 
 @router.get("/{user_id}")
 async def get_user(db: DBDep, user_id: int):

@@ -11,6 +11,8 @@ from src.models.users import UsersOrm
 from src.models.categories import CategoriesOrm
 from src.models.bookings import BookingsOrm
 from src.models.items import ItemsOrm
+from src.models.item_photos import ItemPhotosOrm
+from src.models.photos_url import PhotosUrlOrm
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

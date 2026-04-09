@@ -1,3 +1,8 @@
+from src.models.item_photos import ItemPhotosOrm
+from src.models.photos_url import PhotosUrlOrm
+from src.repositories.item_photos import ItemPhotosRepository
+from src.repositories.items import ItemRepository
+from src.repositories.photos_url import PhotosUrlRepository
 from src.repositories.users import UserRepository
 
 
@@ -10,6 +15,9 @@ class DBManager:
         self.session = self.session_factory()
 
         self.users = UserRepository(self.session)
+        self.items = ItemRepository(self.session)
+
+
 
         return self
 

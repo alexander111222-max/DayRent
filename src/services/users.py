@@ -1,5 +1,5 @@
 from src.repositories.mappers.mappers import UserDataMapper
-from src.schemas.users import UserAddRequestSchema, UserAddSchema
+from src.schemas.users import UserAddRequestSchema, UserAddSchema, CoordinateUser
 from src.services.base import BaseService
 from src.utils.exceptions import UserNotFoundException, ObjectNotFoundException
 
@@ -11,8 +11,7 @@ class UserService(BaseService):
 
     async def add_one(self, data: UserAddSchema):
 
-        data.lat = 1
-        data.lon = 2
+
 
         added_user = await self._db.users.add_one(data)
 
@@ -30,6 +29,12 @@ class UserService(BaseService):
             raise UserNotFoundException
         return user
 
+    async def update_coordinates(self, user_id: int, lat: float, lon: float):
+        coor_user = CoordinateUser(
+            lat=lat,
+            lon=lon
+        )
+        await self._db.users.edit(coor_user, id=user_id)
 
 
 
