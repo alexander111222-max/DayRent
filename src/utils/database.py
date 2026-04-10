@@ -16,7 +16,8 @@ class DBManager:
 
         self.users = UserRepository(self.session)
         self.items = ItemRepository(self.session)
-
+        self.item_photos = ItemPhotosRepository(self.session)
+        self.photos_url = PhotosUrlRepository(self.session)
 
 
         return self

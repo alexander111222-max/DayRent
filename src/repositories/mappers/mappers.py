@@ -19,3 +19,10 @@ class ItemDataMapper(DataMapper):
     model = ItemsOrm
 
 
+class ItemPhotosMapper(DataMapper):
+    schema = ItemPhotosSchema
+    model = ItemPhotosOrm
+
+class PhotosUrlMapper(DataMapper):
+    schema = PhotosUrlSchema
+    model = PhotosUrlOrm

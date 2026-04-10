@@ -35,3 +35,11 @@ async def edit_item(data: ItemEditSchema,item_id: int, db: DBDep):
         raise HTTPException(status_code=404, detail="Вещь не найдена")
 
 
+@router.post("/{item_id}/photos")
+async def load_photos(files: List[UploadFile], item_id: int, ):
+    files_data = []
+    for f in files:
+        content = await f.read()
+        files_data.append({"filename": f.filename, "content": content})
+
+    upload_photos.delay(files_data, item_id)

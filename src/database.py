@@ -12,3 +12,7 @@ engine = create_async_engine(settings.DB_URL)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 
+def get_async_session_maker(url: str):
+    # Эта функция создает новый движок КАЖДЫЙ РАЗ при вызове
+    engine = create_async_engine(url, pool_pre_ping=True)
+    return async_sessionmaker(bind=engine, expire_on_commit=False)
