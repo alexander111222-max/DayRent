@@ -7,7 +7,8 @@ from src.api.dependencies import DBDep, user_idDep
 from src.schemas.items import ItemAddRequestSchema, ItemEditSchema
 from src.services.items import ItemsService
 from src.utils.exceptions import MultipleItemFoundException, ItemNotFoundException
-from src.tasks.tasks import geocode_item, upload_photos
+from src.tasks.tasks_geocode import geocode_item
+from src.tasks.tasks_photos import upload_photos
 
 router = APIRouter(prefix="/items", tags=["items"])
 
@@ -38,8 +39,11 @@ async def edit_item(data: ItemEditSchema,item_id: int, db: DBDep):
 @router.post("/{item_id}/photos")
 async def load_photos(files: List[UploadFile], item_id: int, ):
     files_data = []
-    for f in files:
-        content = await f.read()
-        files_data.append({"filename": f.filename, "content": content})
+    for file in files:
+        content = await file.read()
+        files_data.append({
+            "filename": file.filename,
+            "content": content
+        })
 
     upload_photos.delay(files_data, item_id)

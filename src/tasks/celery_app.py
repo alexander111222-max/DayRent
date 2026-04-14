@@ -6,7 +6,8 @@ celery_instance = Celery(
     "tasks",
     broker=settings.REDIS_URL,
     include=[
-        "src.tasks.tasks",
+        "src.tasks.tasks_geocode",
+        "src.tasks.tasks_photos",
     ]
 
 )
