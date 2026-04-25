@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     SECRET_KEY_S3: str
     ACCESS_KEY_S3: str
 
+    ES_PASSWORD: str
+    ES_HOST: str
+    ES_INDEX: str
+
     model_config = SettingsConfigDict(env_file=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env-local"))
 
     @property

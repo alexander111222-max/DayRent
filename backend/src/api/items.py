@@ -2,10 +2,12 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, UploadFile
 
+from backend.src.schemas.search import DocumentIn
 from backend.src.services.geocoder.yandex_geocoder import yandex_geo
 from backend.src.api.dependencies import DBDep, user_idDep
 from backend.src.schemas.items import ItemAddRequestSchema, ItemEditSchema
 from backend.src.services.items import ItemsService
+from backend.src.services.search import create_doc
 from backend.src.utils.exceptions import MultipleItemFoundException, ItemNotFoundException
 from backend.src.tasks.tasks_geocode import geocode_item
 from backend.src.tasks.tasks_photos import upload_photos
@@ -18,7 +20,11 @@ router = APIRouter(prefix="/items", tags=["items"])
 @router.post("/")
 async def add_item(data: ItemAddRequestSchema, db: DBDep, user_id: user_idDep):
     added_item = await ItemsService(db).add_item(data, user_id)
-
+    doc_id = await create_doc(added_item.id,
+                              doc=DocumentIn(
+                                  **data.model_dump(),
+                                  created_at=added_item.created_at
+                              ))
     geocode_item.delay(added_item.id, added_item.address)
 
     return {"added_item": added_item}

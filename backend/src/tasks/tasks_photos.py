@@ -58,3 +58,5 @@ def upload_single_photo(self, file_content: bytes, position: int, item_id: int) 
 def upload_photos(files_data: list[dict], item_id: int) -> None:
     for position, file_dict in enumerate(files_data, start=1):
         upload_single_photo.delay(file_dict["content"], position, item_id)
+
+
