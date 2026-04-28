@@ -8,29 +8,39 @@ from backend.src.services.search import update_doc
 from backend.src.services.users import UserService
 from backend.src.tasks.celery_app import celery_instance
 from backend.src.utils.database import DBManager
+from backend.src.utils.exceptions import YandexGeocoderUnavailableException, YandexGeocoderAddressNotFoundException
 
 
-@celery_instance.task
-def geocode_user(user_id: int, address: str):
-
+@celery_instance.task(bind=True, max_retries=3, default_retry_delay=10)
+def geocode_user(self, user_id: int, address: str):
     async def _update():
-        lat, lon = asyncio.run(yandex_geo.get_coordinates(address))
+        lon, lat = await yandex_geo.get_coordinates(address)
         async with DBManager(async_session_maker) as db:
             service = UserService(db)
             await service.update_coordinates(user_id, lat, lon)
             await db.commit()
 
-    asyncio.run(_update())
+    try:
+        asyncio.run(_update())
+    except YandexGeocoderUnavailableException as exc:
+        raise self.retry(exc=exc)
+    except YandexGeocoderAddressNotFoundException:
+        return
 
-@celery_instance.task
-def geocode_item(item_id: int, address: str):
 
+@celery_instance.task(bind=True, max_retries=3, default_retry_delay=10)
+def geocode_item(self, item_id: int, address: str):
     async def _update():
-        lat, lon = await yandex_geo.get_coordinates(address)
+        lon, lat = await yandex_geo.get_coordinates(address)
         async with DBManager(async_session_maker) as db:
             service = ItemsService(db)
             await service.update_coordinates(item_id, lat, lon)
             await db.commit()
-        doc_id = await update_doc(item_id, DocumentUpdate(location={"lat": lat, "lon": lon}))
+        await update_doc(item_id, DocumentUpdate(location={"lat": lat, "lon": lon}))
 
-    asyncio.run(_update())
+    try:
+        asyncio.run(_update())
+    except YandexGeocoderUnavailableException as exc:
+        raise self.retry(exc=exc)
+    except YandexGeocoderAddressNotFoundException:
+        return

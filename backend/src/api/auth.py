@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, HTTPException
 from fastapi import Response
 
@@ -13,6 +15,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def register(data: UserAddRequestSchema, db: DBDep):
 
     added_user = await AuthService(db).register_user(data)
+
     geocode_user.delay(added_user.id, added_user.address)
 
     return {"added_user": added_user}

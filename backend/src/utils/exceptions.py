@@ -26,3 +26,18 @@ class ItemNotFoundException(DayRentException):
 
 class MultipleItemFoundException(DayRentException):
     detail = "Слишком много вещей для удаления/обновления"
+
+
+class UserLocationNotReadyException(DayRentException):
+    detail = "Локация пользователя ещё не готова"
+
+
+
+# геокодер яндекс
+
+
+class YandexGeocoderAddressNotFoundException(DayRentException):
+    detail = "Адрес не найден"
+
+class YandexGeocoderUnavailableException(DayRentException):
+    detail = "Яндекс геокодер недоступен"

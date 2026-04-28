@@ -30,8 +30,6 @@ class PhotosUrlMapper(DataMapper):
     model = PhotosUrlOrm
 
 
-
-
 class CategoriesMapper(DataMapper):
     schema = CategorySchema
     model = CategoriesOrm

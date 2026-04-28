@@ -54,8 +54,8 @@ class UserSchemaWithHashPass(BaseModel):
     city: str
     address: str
     hash_password: str
-    lat: Decimal
-    lon: Decimal
+    lat: Decimal | None
+    lon: Decimal | None
 
     model_config = ConfigDict(from_attributes=True)
 

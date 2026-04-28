@@ -527,6 +527,22 @@ zookeeper = ["kazoo (>=1.3.1)"]
 zstd = ["zstandard (==0.23.0)"]
 
 [[package]]
+name = "celery-pool-asyncio"
+version = "0.2.0"
+description = "Celery pool to run coroutine tasks"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "celery-pool-asyncio-0.2.0.tar.gz", hash = "sha256:330e0ff31a7f6e3ea9cb004843f2f967601602b52cee05a2faea7ed65b76a5b8"},
+    {file = "celery_pool_asyncio-0.2.0-py2.py3-none-any.whl", hash = "sha256:72cdec065060bc99af57771cba7f0444d8a901842ee3c859d0d167c547764a21"},
+]
+
+[package.dependencies]
+asgiref = "*"
+celery = "*"
+
+[[package]]
 name = "certifi"
 version = "2026.2.25"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -1428,6 +1444,18 @@ files = [
     {file = "multidict-6.7.1-cp39-cp39-win_arm64.whl", hash = "sha256:749aa54f578f2e5f439538706a475aa844bfa8ef75854b1401e6e528e4937cf9"},
     {file = "multidict-6.7.1-py3-none-any.whl", hash = "sha256:55d97cc6dae627efa6a6e548885712d4864b81110ac76fa4e534c03819fa4a56"},
     {file = "multidict-6.7.1.tar.gz", hash = "sha256:ec6652a1bee61c53a3e5776b6049172c53b6aaba34f18c9ad04f82712bac623d"},
+]
+
+[[package]]
+name = "nest-asyncio"
+version = "1.6.0"
+description = "Patch asyncio to allow nested event loops"
+optional = false
+python-versions = ">=3.5"
+groups = ["main"]
+files = [
+    {file = "nest_asyncio-1.6.0-py3-none-any.whl", hash = "sha256:87af6efd6b5e897c81050477ef65c62e2b2f35d51703cae01aff2905b1852e1c"},
+    {file = "nest_asyncio-1.6.0.tar.gz", hash = "sha256:6f172d5449aca15afd6c646851f4e31e02c598d553a667e38cafa997cfec55fe"},
 ]
 
 [[package]]
@@ -2531,4 +2559,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13"
-content-hash = "1a62f7c9184aa337734f91b15654fa8696247296204f73e8689462ac203753d3"
+content-hash = "fb8b9cc876433fa82d45732781cf3ac2aa21a1aad57cfb197f0bea044e387107"
