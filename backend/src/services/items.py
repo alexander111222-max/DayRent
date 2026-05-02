@@ -28,6 +28,10 @@ class ItemsService(BaseService):
         await self._db.commit()
         return added_item
 
+    async def get_items_by_ids(self, ids: list[int]):
+        items = await self._db.items.get_all_by_id(ids)
+        return items
+
 
     async def edit(self, data: ItemEditSchema, *filters, **filter_by):
         try:

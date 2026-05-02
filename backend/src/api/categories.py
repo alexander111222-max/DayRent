@@ -26,7 +26,7 @@ async def get_category_by_id(db: DBDep):
 
 @router.get("/{category_id}")
 async def get_category_by_id(category_id: int, db: DBDep):
+    category = await CategoriesService(db).get_category_by_filter(id=category_id)
     return category
 
-    category = await CategoriesService(db).get_category_by_filter(id=category_id)
 

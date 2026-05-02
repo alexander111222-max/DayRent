@@ -41,10 +41,16 @@ async def edit_item(data: ItemEditSchema,item_id: int, db: DBDep):
     except ItemNotFoundException:
         raise HTTPException(status_code=404, detail="Вещь не найдена")
 
+
+
+
 @router.delete("/{item_id}")
 async def delete_item(item_id: int, db: DBDep):
     deleted_item = await ItemsService(db).delete_item(id=item_id)
     return deleted_item
+
+
+
 
 @router.post("/{item_id}/photos")
 async def load_photos(files: List[UploadFile], item_id: int, ):

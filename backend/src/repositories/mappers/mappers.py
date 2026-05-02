@@ -1,9 +1,11 @@
+from backend.src.models.baskets import BasketsOrm
 from backend.src.models.categories import CategoriesOrm
 from backend.src.models.item_photos import ItemPhotosOrm
 from backend.src.models.items import ItemsOrm
 from backend.src.models.photos_url import PhotosUrlOrm
 from backend.src.models.users import UsersOrm
 from backend.src.repositories.mappers.base import DataMapper
+from backend.src.schemas.baskets import BasketSchema
 from backend.src.schemas.categories import CategorySchema
 from backend.src.schemas.item_photos import ItemPhotosSchema
 from backend.src.schemas.items import ItemSchema
@@ -25,6 +27,7 @@ class ItemPhotosMapper(DataMapper):
     schema = ItemPhotosSchema
     model = ItemPhotosOrm
 
+
 class PhotosUrlMapper(DataMapper):
     schema = PhotosUrlSchema
     model = PhotosUrlOrm
@@ -33,3 +36,8 @@ class PhotosUrlMapper(DataMapper):
 class CategoriesMapper(DataMapper):
     schema = CategorySchema
     model = CategoriesOrm
+
+
+class BasketsMapper(DataMapper):
+    schema = BasketSchema
+    model = BasketsOrm

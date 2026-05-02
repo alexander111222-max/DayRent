@@ -51,6 +51,12 @@ class BaseRepository:
 
         return [self.mapper.map_to_domain_entity(model) for model in (objs.scalars().all())]
 
+    async def get_all_by_id(self, ids: list[int]):
+        query = select(self._model).where(self._model.id.in_(ids))
+
+        objs = await self._session.execute(query)
+
+        return [self.mapper.map_to_domain_entity(model) for model in (objs.scalars().all())]
 
     async def get_all(self):
 

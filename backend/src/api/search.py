@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 
 from backend.src.api.dependencies import PaginationDep, user_idDep, DBDep
 from backend.src.schemas.search import SearchRequestSchema, Location
+from backend.src.services.items import ItemsService
 from backend.src.services.search import search
 from backend.src.services.users import UserService
 from backend.src.utils.exceptions import UserLocationNotReadyException
@@ -38,6 +39,11 @@ async def search_items(
     )
     try:
         result_search = await search(req, pagination_param)
+        ids = []
+        results = result_search.results
+        for obj in results:
+            ids.append(obj.id)
+        items = await ItemsService(db).get_items_by_ids(ids)
     except UserLocationNotReadyException:
         raise HTTPException(status_code=409, detail="Ваше местонахождение еще не обновилось, подождите пару секунд")
-    return result_search
+    return result_search.total, items
