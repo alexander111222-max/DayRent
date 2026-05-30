@@ -1,13 +1,14 @@
 from contextlib import asynccontextmanager
-
 import uvicorn
 from fastapi import FastAPI
-
 from backend.src.api.users import router as router_users
 from backend.src.api.auth import router as router_auth
 from backend.src.api.items import router as router_items
 from backend.src.api.categories import router as router_categories
-from backend.src.api.search import router as search_router
+from backend.src.api.search import router as router_search
+from backend.src.api.bookings import router as router_bookings
+from backend.src.api.baskets import router as router_baskets
+from backend.src.api.profiles import router as router_profiles
 
 from backend.src.connectors.elastic_connector import close_es_client, get_es_client
 from backend.src.services.search import ensure_index
@@ -28,7 +29,11 @@ app.include_router(router_users)
 app.include_router(router_auth)
 app.include_router(router_items)
 app.include_router(router_categories)
-app.include_router(search_router)
+app.include_router(router_search)
+app.include_router(router_bookings)
+app.include_router(router_baskets)
+app.include_router(router_profiles)
+
 
 
 if __name__ == "__main__":

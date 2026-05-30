@@ -1,8 +1,6 @@
-from backend.src.repositories.mappers.mappers import UserDataMapper
-from backend.src.schemas.users import UserAddRequestSchema, UserAddSchema, CoordinateUser
+from backend.src.schemas.users import UserAddSchema, CoordinateUser, UserPatchSchema
 from backend.src.services.base import BaseService
 from backend.src.utils.exceptions import UserNotFoundException, ObjectNotFoundException
-
 
 class UserService(BaseService):
     def __init__(self, db):
@@ -19,8 +17,6 @@ class UserService(BaseService):
 
         return added_user
 
-
-
     async def get_user(self, **filter_by):
 
         try:
@@ -35,6 +31,7 @@ class UserService(BaseService):
             lon=lon
         )
         await self._db.users.edit(coor_user, id=user_id)
+        await self._db.commit()
 
 
 
@@ -42,3 +39,12 @@ class UserService(BaseService):
         deleted_user = await self._db.users.delete(*filters, **filter_by)
         await self._db.commit()
         return deleted_user
+
+
+    async def modify_user(self, data: UserPatchSchema, user_id: int, *filters, **filter_by):
+        from backend.src.tasks.tasks_geocode import geocode_user
+        if data.address:
+            geocode_user.delay(user_id, data.address)
+        modified_user = await self._db.users.edit(data, *filters, **filter_by)
+        await self._db.commit()
+        return modified_user

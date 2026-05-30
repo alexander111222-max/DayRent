@@ -1,12 +1,11 @@
 
 from fastapi import APIRouter, HTTPException
-
-
 from backend.src.api.dependencies import DBDep
 from backend.src.services.users import UserService
 from backend.src.utils.exceptions import UserNotFoundException
 
-
+import logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/user", tags=["users"])
 
@@ -15,9 +14,8 @@ router = APIRouter(prefix="/user", tags=["users"])
 @router.delete("/{user_id}")
 async def delete_user(user_id: int, db: DBDep):
     deleted_user = await UserService(db).delete_user(id=user_id)
+    logger.info(f"Пользователь с id {user_id} удалён")
     return deleted_user
-
-
 
 
 @router.get("/{user_id}")
@@ -27,6 +25,7 @@ async def get_user(db: DBDep, user_id: int):
     except UserNotFoundException:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     return user
+
 
 
 

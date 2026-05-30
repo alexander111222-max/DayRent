@@ -17,6 +17,9 @@ class CategoriesService(BaseService):
         category = await self._db.categories.get_one_or_none(**filter_by)
         return category
 
+    async def get_all_categories(self):
+        categories = await self._db.categories.get_all()
+        return categories
     async def delete_category(self, *filters, **filter_by):
         deleted_category = await self._db.categories.delete(*filters, **filter_by)
         await self._db.commit()

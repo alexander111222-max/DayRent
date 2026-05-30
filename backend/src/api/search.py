@@ -6,8 +6,9 @@ from backend.src.schemas.search import SearchRequestSchema, Location
 from backend.src.services.items import ItemsService
 from backend.src.services.search import search
 from backend.src.services.users import UserService
-from backend.src.utils.exceptions import UserLocationNotReadyException
-
+from backend.src.utils.exceptions import UserLocationNotReadyException, UserAuthError
+import logging
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/search", tags=["search"])
 
 
@@ -24,10 +25,13 @@ async def search_items(
         category_id: int | None = None,
         nearby: bool | None = None
         ):
-
-    user = await UserService(db).get_user(id=user_id)
-    location = Location(lat=user.lat,
-                        lon=user.lon)
+    if user_id is not None:
+        user = await UserService(db).get_user(id=user_id)
+        location = Location(lat=user.lat,
+                            lon=user.lon)
+    else:
+        location = Location(lat=None,
+                            lon=None)
     req = SearchRequestSchema(
         query=query,
         price_from=price_from,
@@ -38,12 +42,17 @@ async def search_items(
         nearby=nearby
     )
     try:
-        result_search = await search(req, pagination_param)
+        result_search = await search(req, pagination_param, user_id)
         ids = []
         results = result_search.results
         for obj in results:
-            ids.append(obj.id)
+            ids.append(int(obj.id))
         items = await ItemsService(db).get_items_by_ids(ids)
     except UserLocationNotReadyException:
+        logger.warning(f"Попытка выолнить поиск ближайших обьявлений без координат user_id: {user_id}")
         raise HTTPException(status_code=409, detail="Ваше местонахождение еще не обновилось, подождите пару секунд")
+    except UserAuthError:
+        logger.debug(f"Попытка выолнить поиск ближайших обьявлений без авторизации user_id: {user_id}")
+        raise HTTPException(status_code=401, detail="Пожалуйста авторизируйтесь")
+
     return result_search.total, items

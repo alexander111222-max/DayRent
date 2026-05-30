@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import Request, Query
+from fastapi import Request, Query, HTTPException
 
 from fastapi.params import Depends
 from pydantic import BaseModel
@@ -21,10 +21,17 @@ def get_token(request: Request):
     return token
 
 def get_user_id(db: DBDep, token: str = Depends(get_token)):
+    if token is None:
+        return None
     user_id = AuthService(db).decode_token(token)
     return user_id
 
-user_idDep = Annotated[int, Depends(get_user_id)]
+def get_current_user_id(user_id: int | None = Depends(get_user_id)):
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Сначала авторизуйтесь")
+
+    return user_id
+user_idDep = Annotated[int, Depends(get_current_user_id)]
 
 
 

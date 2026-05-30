@@ -1,4 +1,5 @@
-
+from backend.src.repositories.baskets import BasketsRepository
+from backend.src.repositories.bookings import BookingsRepository
 from backend.src.repositories.categories import CategoriesRepository
 from backend.src.repositories.item_photos import ItemPhotosRepository
 from backend.src.repositories.items import ItemRepository
@@ -19,6 +20,8 @@ class DBManager:
         self.item_photos = ItemPhotosRepository(self.session)
         self.photos_url = PhotosUrlRepository(self.session)
         self.categories = CategoriesRepository(self.session)
+        self.bookings = BookingsRepository(self.session)
+        self.baskets = BasketsRepository(self.session)
 
 
         return self

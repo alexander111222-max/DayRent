@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class BasketSchema(BaseModel):
@@ -6,6 +6,7 @@ class BasketSchema(BaseModel):
     user_id: int
     item_id: int
 
+    model_config = ConfigDict(from_attributes=True)
 
 class BasketAddSchema(BaseModel):
     user_id: int

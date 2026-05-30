@@ -95,15 +95,19 @@ class BaseRepository:
         update_stmt = (update(self._model)
                        .filter(*filters)
                        .filter_by(**filter_by)
-                       .values(**data.model_dump(exclude_unset=True)))
+                       .values(**data.model_dump(exclude_unset=True))).returning(self._model)
 
-        await self._session.execute(update_stmt)
+        obj = await self._session.execute(update_stmt)
+        return self.mapper.map_to_domain_entity(obj.scalar_one_or_none())
 
     async def delete(self, *filters, **filter_by):
         stmt = delete(self._model).filter(*filters).filter_by(**filter_by).returning(self._model)
 
         obj = await self._session.execute(stmt)
         model = obj.scalar_one_or_none()
+
+        if not model:
+            return None
 
         return self.mapper.map_to_domain_entity(model)
 

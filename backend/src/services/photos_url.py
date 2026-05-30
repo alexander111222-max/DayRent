@@ -8,4 +8,5 @@ class PhotosUrlService(BaseService):
 
     async def add_one(self, data: PhotosUrlAddSchema):
         photo_url = await self._db.photos_url.add_one(data)
+        await self._db.commit()
         return photo_url

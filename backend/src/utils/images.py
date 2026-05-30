@@ -3,7 +3,8 @@ from functools import partial
 from io import BytesIO
 import asyncio
 from PIL import Image
-
+import logging
+logger = logging.getLogger(__name__)
 from backend.src.utils.s3 import s3_client
 
 PHOTO_SIZES = {
@@ -33,7 +34,7 @@ async def _resize_and_upload(
 
     key = f"{item_id}/{photo_id}/{width}x{height}.jpg"
     url = await s3_client.upload_file(buffer, key)
-
+    logger.debug(f"Фото по url {key} успешно загружено")
     return url, label
 
 

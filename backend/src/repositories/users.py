@@ -4,7 +4,7 @@ from sqlalchemy.exc import NoResultFound
 from backend.src.models.users import UsersOrm
 from backend.src.repositories.base import BaseRepository
 from backend.src.repositories.mappers.mappers import UserDataMapper
-from backend.src.schemas.users import UserSchemaWithHashPass
+from backend.src.schemas.users import UserSchemaWithHashPass, UserPatchSchema
 from backend.src.utils.exceptions import ObjectNotFoundException
 
 

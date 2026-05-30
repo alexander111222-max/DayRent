@@ -6,7 +6,7 @@ from backend.src.api.dependencies import PaginationParams
 from backend.src.config import settings
 from backend.src.connectors.elastic_connector import get_es_client
 from backend.src.schemas.search import DocumentIn, DocumentUpdate, SearchRequestSchema, SearchHit, SearchResponse
-from backend.src.utils.exceptions import UserLocationNotReadyException
+from backend.src.utils.exceptions import UserLocationNotReadyException, UserAuthError
 
 INDEX_SETTINGS = {
     "mappings": {
@@ -58,7 +58,7 @@ async def update_doc(doc_id: int, doc: DocumentUpdate):
     return doc_id
 
 
-async def search(req: SearchRequestSchema, pag_params: PaginationParams):
+async def search(req: SearchRequestSchema, pag_params: PaginationParams, user_id: int):
     es = get_es_client()
     offset = (pag_params.page - 1) * pag_params.per_page
     limit = pag_params.per_page
@@ -91,7 +91,13 @@ async def search(req: SearchRequestSchema, pag_params: PaginationParams):
         filter_clauses.append({"term": {"category_id": req.category_id}})
 
     if req.nearby:
-        if req.location.lat is None or req.location.lon is None:
+        if user_id is None:
+            raise UserAuthError
+        elif (
+                req.location is None
+                or req.location.lat is None
+                or req.location.lon is None
+            ):
             raise UserLocationNotReadyException
         filter_clauses.append({
             "geo_distance": {

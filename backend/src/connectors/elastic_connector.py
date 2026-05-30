@@ -15,7 +15,7 @@ def get_es_client() -> AsyncElasticsearch:
             basic_auth=("elastic", settings.ES_PASSWORD),
             verify_certs=False # при проде добавить надо будет, ну указать True
         )
-        logging.info(f"Connected to ES at {settings.ES_HOST}")
+        logging.info(f"Соединение с ES по хосту {settings.ES_HOST} открыто")
     return _client
 
 async def close_es_client():
@@ -23,6 +23,7 @@ async def close_es_client():
     if _client:
         await _client.close()
         _client = None
+        logging.info(f"Соединение с ES по хосту {settings.ES_HOST} закрыто")
 
 
 

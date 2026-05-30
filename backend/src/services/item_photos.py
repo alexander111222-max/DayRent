@@ -8,6 +8,7 @@ class ItemPhotosService(BaseService):
 
     async def add_one(self, data: ItemPhotosAddSchema):
         item_photo = await self._db.item_photos.add_one(data)
+        await self._db.commit()
         return item_photo
 
 

@@ -1,6 +1,7 @@
 import logging
 import redis.asyncio as redis
 
+logger = logging.getLogger(__name__)
 
 class RedisManager:
     _redis: redis.Redis
@@ -10,16 +11,16 @@ class RedisManager:
         self.port = port
 
     async def connect(self):
-        logging.info(f"Подключаюсь к Redis host={self.host}, port={self.port}")
+        logger.info(f"Подключаюсь к Redis host={self.host}, port={self.port}")
         self._redis = redis.Redis(host=self.host, port=self.port, decode_responses=True)
         # Проверка подключения
         try:
             await self._redis.ping()
-            logging.info(
+            logger.info(
                 f"Успешное подключение к Redis host={self.host}, port={self.port}"
             )
         except Exception as e:
-            logging.error(f"Не удалось подключиться к Redis: {e}")
+            logger.critical(f"Не удалось подключиться к Redis: {e}")
             raise
 
     async def set(self, key: str, value: str, expire: int | None = None):

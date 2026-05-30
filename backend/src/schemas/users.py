@@ -20,7 +20,7 @@ class UserSchema(BaseModel):
 class UserAddRequestSchema(BaseModel):
     username: str
     surname: str
-    age: int
+    age: int = Field(ge=18, le=120)
     phone: str
     email: EmailStr
     city: str
@@ -62,3 +62,28 @@ class UserSchemaWithHashPass(BaseModel):
 class CoordinateUser(BaseModel):
     lat: Decimal
     lon: Decimal
+
+
+class UserUpdateSchema(BaseModel):
+    id: int
+    username: str
+    surname: str
+    age: int = Field(ge=18, le=120)
+    phone: str
+    email: EmailStr
+    city: str
+    address: str
+    lat: Decimal | None
+    lon: Decimal | None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class UserPatchSchema(BaseModel):
+    username: str | None = None
+    surname: str | None = None
+    age: int | None = Field(default=None, ge=18, le=120)
+    phone: str | None = None
+    email: EmailStr | None = None
+    city: str | None = None
+    address: str | None = None
+    

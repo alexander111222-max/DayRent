@@ -13,6 +13,8 @@ class ObjectNotFoundException(DayRentException):
 class UserNotFoundException(DayRentException):
     detail = "Пользователь/и не найден/и"
 
+class CategoryNotFoundException(DayRentException):
+    detail = "Категория не найдена"
 
 class UserLoginException(DayRentException):
     detail = "Не удалось войти"
@@ -31,7 +33,8 @@ class MultipleItemFoundException(DayRentException):
 class UserLocationNotReadyException(DayRentException):
     detail = "Локация пользователя ещё не готова"
 
-
+class UserAuthError(DayRentException):
+    detail = "Пользователь не авторизирован"
 
 # геокодер яндекс
 
@@ -41,3 +44,53 @@ class YandexGeocoderAddressNotFoundException(DayRentException):
 
 class YandexGeocoderUnavailableException(DayRentException):
     detail = "Яндекс геокодер недоступен"
+
+
+
+
+
+
+class BookingsAlreadyTakenError(DayRentException):
+    detail = "Вещь уже забронирована на данный период"
+
+
+
+
+
+
+
+class ItemInBasketNotFoundException(DayRentException):
+    detail = "Такой вещи нет в вашей корзине"
+
+
+
+
+
+class ForbiddenException(DayRentException):
+    detail = "Доступ запрещен"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

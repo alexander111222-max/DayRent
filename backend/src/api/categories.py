@@ -20,9 +20,9 @@ async def delete_category(category_id: int, db: DBDep):
 
 
 @router.get("/")
-async def get_category_by_id(db: DBDep):
-    category = await CategoriesService(db).get_category_by_filter()
-    return category
+async def get_categories(db: DBDep):
+    categories = await CategoriesService(db).get_all_categories()
+    return categories
 
 @router.get("/{category_id}")
 async def get_category_by_id(category_id: int, db: DBDep):
