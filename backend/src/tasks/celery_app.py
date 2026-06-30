@@ -1,4 +1,6 @@
 import nest_asyncio
+from celery.schedules import crontab
+
 nest_asyncio.apply()
 from celery import Celery
 
@@ -12,3 +14,10 @@ celery_instance = Celery(
         "backend.src.tasks.tasks_photos",
     ]
 )
+
+celery_instance.conf.beat_schedule = {
+    "dayrent": {
+        "task": "change_to_completed",
+        "schedule": crontab(minute=1, hour=0)
+    }
+}

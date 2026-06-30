@@ -1,7 +1,8 @@
 from backend.src.models.bookings import StatusEnum
-from backend.src.schemas.bookings import BookingsAddRequestSchema, BookingsAddSchema
+from backend.src.schemas.bookings import BookingsAddRequestSchema, BookingsAddSchema, BookingPatchSchema
 from backend.src.services.base import BaseService
-from backend.src.utils.exceptions import BookingsAlreadyTakenError
+from backend.src.utils.exceptions import BookingsAlreadyTakenError, MultipleObjectsFoundException, \
+    ObjectNotFoundException, MultipleBookingsFoundException, BookingNotFoundException
 
 
 class BookingsService(BaseService):
@@ -24,3 +25,14 @@ class BookingsService(BaseService):
     async def get_bookings_by_filter(self, *filters, **filter_by):
         bookings = await self._db.bookings.get_bookings_by_filter(*filters, **filter_by)
         return bookings
+
+    async def edit_booking(self, data: BookingPatchSchema, *filters, **filter_by):
+        try:
+            booking = await self._db.bookings.edit(data, *filters, **filter_by)
+
+        except ObjectNotFoundException:
+            raise BookingNotFoundException
+        except MultipleObjectsFoundException:
+            raise MultipleBookingsFoundException
+        return booking
+

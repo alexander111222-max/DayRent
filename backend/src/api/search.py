@@ -1,7 +1,7 @@
 
 from fastapi import APIRouter, HTTPException
 
-from backend.src.api.dependencies import PaginationDep, user_idDep, DBDep
+from backend.src.api.dependencies import PaginationDep, user_idDep, DBDep, user_idDep_optional
 from backend.src.schemas.search import SearchRequestSchema, Location
 from backend.src.services.items import ItemsService
 from backend.src.services.search import search
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/search", tags=["search"])
 @router.get("/")
 async def search_items(
         pagination_param: PaginationDep,
-        user_id: user_idDep,
+        user_id: user_idDep_optional,
         db: DBDep,
         query: str | None = None,
         price_from: int | None = None,

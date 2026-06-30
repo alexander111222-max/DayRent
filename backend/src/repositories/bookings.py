@@ -1,6 +1,6 @@
 from sqlalchemy import select, or_, and_
 
-from backend.src.models.bookings import BookingsOrm
+from backend.src.models.bookings import BookingsOrm, StatusEnum
 from backend.src.models.items import ItemsOrm
 from backend.src.repositories.base import BaseRepository
 from backend.src.repositories.mappers.mappers import BookingsDataMapper
@@ -39,7 +39,8 @@ class BookingsRepository(BaseRepository):
         bookings = await self.get_bookings_by_filter(
             self._model.item_id == data.item_id,
             self._model.date_from < data.date_to,
-            self._model.date_to > data.date_from
+            self._model.date_to > data.date_from,
+            self._model.status == StatusEnum.ACTIVE
         )
 
         if bookings:

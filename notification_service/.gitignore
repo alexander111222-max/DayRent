@@ -1,0 +1,7 @@
+/shelf/
+/workspace.xml
+.idea/
+.env-local
+__pycache__/
+*.pyc
+

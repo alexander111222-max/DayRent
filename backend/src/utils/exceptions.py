@@ -71,25 +71,11 @@ class ForbiddenException(DayRentException):
 
 
 
+class BookingNotFoundException(DayRentException):
+    detail = "Бронирование не найдено"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+class MultipleBookingsFoundException(DayRentException):
+    detail = "Бронирование не найдено"
 
 
 
