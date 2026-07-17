@@ -2,10 +2,11 @@ from typing import Type
 
 from pydantic import BaseModel
 from sqlalchemy import insert, select, update, func, delete
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 
 from backend.src.repositories.mappers.base import DataMapper
-from backend.src.utils.exceptions import ObjectNotFoundException, MultipleObjectsFoundException
+from backend.src.utils.exceptions import ObjectNotFoundException, MultipleObjectsFoundException, \
+    ObjectAlreadyExistsException
 
 
 def check_single_obj(function):
@@ -35,12 +36,13 @@ class BaseRepository:
 
 
     async def add_one(self, data: BaseModel):
-
-        stmt = insert(self._model).values(**data.model_dump()).returning(self._model)
-
-        row = await self._session.execute(stmt)
-        model = row.scalar_one_or_none()
-        result = self.mapper.map_to_domain_entity(model)
+        try:
+            stmt = insert(self._model).values(**data.model_dump()).returning(self._model)
+            row = await self._session.execute(stmt)
+            model = row.scalar_one_or_none()
+            result = self.mapper.map_to_domain_entity(model)
+        except IntegrityError:
+            raise ObjectAlreadyExistsException
 
         return result
 

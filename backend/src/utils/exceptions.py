@@ -75,8 +75,29 @@ class BookingNotFoundException(DayRentException):
     detail = "Бронирование не найдено"
 
 class MultipleBookingsFoundException(DayRentException):
-    detail = "Бронирование не найдено"
+    detail = "Слишком много таких броней не найдено"
 
 
+
+class WrongPasswordException(DayRentException):
+    detail = "Пароль неверный"
+
+
+class UserAlreadyExistsException(DayRentException):
+    detail = "Пользователь уже существует"
+
+class ObjectAlreadyExistsException(DayRentException):
+    detail = "Такой объект уже существует"
+
+class NoResultFoundException(DayRentException):
+    detail = "Результатов не найдено"
+
+
+class TokenExpiredException(DayRentException):
+    detail = "Токен истёк"
+
+
+class InvalidTokenException(DayRentException):
+    detail = "Невалидный токен"
 
 

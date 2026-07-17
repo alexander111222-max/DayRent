@@ -26,6 +26,7 @@ class UserAddRequestSchema(BaseModel):
     city: str
     address: str
     password: str
+    password_confirm: str
 
 class UserAddSchema(BaseModel):
     username: str

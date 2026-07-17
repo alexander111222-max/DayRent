@@ -10,4 +10,4 @@ cfg = Config("alembic.ini")
 # МЫ ЖЕСТКО ПРОПИСЫВАЕМ ПУТЬ ТУТ:
 cfg.set_main_option("script_location", "backend/src/migrations")
 
-command.revision(cfg, message="add baskets model", autogenerate=True)
+command.revision(cfg, message="add refresh_tokens model", autogenerate=True)

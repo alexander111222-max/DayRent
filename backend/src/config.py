@@ -1,7 +1,11 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 
 class Settings(BaseSettings):
+
+    MODE: Literal["TEST", "LOCAL", "PROD"]
 
     DB_USER: str
     DB_PASS: str
@@ -24,6 +28,9 @@ class Settings(BaseSettings):
     ES_PASSWORD: str
     ES_HOST: str
     ES_INDEX: str
+
+    TTL: int
+    REFRESH_TOKEN_TTL_DAYS: int
 
     model_config = SettingsConfigDict(env_file=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env-local"))
 

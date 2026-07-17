@@ -20,10 +20,10 @@ def get_token(request: Request):
     token = request.cookies.get("access_token", None)
     return token
 
-def get_user_id(db: DBDep, token: str = Depends(get_token)):
+def get_user_id(token: str = Depends(get_token)):
     if token is None:
         return None
-    user_id = AuthService(db).decode_token(token)
+    user_id = AuthService().decode_token(token)
     return user_id
 
 user_idDep_optional = Annotated[int | None, Depends(get_user_id)]

@@ -26,9 +26,13 @@ class BookingsService(BaseService):
         bookings = await self._db.bookings.get_bookings_by_filter(*filters, **filter_by)
         return bookings
 
-    async def edit_booking(self, data: BookingPatchSchema, *filters, **filter_by):
+    async def edit_booking(self, data: BookingPatchSchema, booking_id: int, user_id: int):
+        booking = await self._db.bookings.get_one_or_none(id=booking_id)
+        if booking.owner_id != user_id:
+            raise
+
         try:
-            booking = await self._db.bookings.edit(data, *filters, **filter_by)
+            booking = await self._db.bookings.edit(data, id=booking_id)
 
         except ObjectNotFoundException:
             raise BookingNotFoundException

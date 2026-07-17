@@ -33,7 +33,7 @@ INDEX_SETTINGS = {
 
 async def ensure_index():
     es = get_es_client()
-    index = es.indices.exists(index=settings.ES_INDEX)
+    index = await es.indices.exists(index=settings.ES_INDEX)
     if not index:
         logging.info("Создан индекс")
         await es.indices.create(index=settings.ES_INDEX, body=INDEX_SETTINGS)

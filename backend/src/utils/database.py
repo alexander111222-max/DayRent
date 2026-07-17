@@ -4,6 +4,7 @@ from backend.src.repositories.categories import CategoriesRepository
 from backend.src.repositories.item_photos import ItemPhotosRepository
 from backend.src.repositories.items import ItemRepository
 from backend.src.repositories.photos_url import PhotosUrlRepository
+from backend.src.repositories.refresh_tokens import RefreshTokensRepository
 from backend.src.repositories.users import UserRepository
 
 
@@ -22,6 +23,7 @@ class DBManager:
         self.categories = CategoriesRepository(self.session)
         self.bookings = BookingsRepository(self.session)
         self.baskets = BasketsRepository(self.session)
+        self.refresh_tokens = RefreshTokensRepository(self.session)
 
 
         return self
