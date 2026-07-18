@@ -2,7 +2,8 @@ from backend.src.models.bookings import StatusEnum
 from backend.src.schemas.bookings import BookingsAddRequestSchema, BookingsAddSchema, BookingPatchSchema
 from backend.src.services.base import BaseService
 from backend.src.utils.exceptions import BookingsAlreadyTakenError, MultipleObjectsFoundException, \
-    ObjectNotFoundException, MultipleBookingsFoundException, BookingNotFoundException
+    ObjectNotFoundException, MultipleBookingsFoundException, BookingNotFoundException, \
+    BookingCancelAccessDeniedException, ItemNotFoundException, BookingForbiddenException
 
 
 class BookingsService(BaseService):
@@ -12,6 +13,12 @@ class BookingsService(BaseService):
 
     async def add_booking(self, data: BookingsAddRequestSchema, user_id: int):
         booking_data = BookingsAddSchema(**data.model_dump(), status=StatusEnum.ACTIVE, rent_id=user_id)
+        item = await self._db.items.get_one_or_none(id=data.item_id)
+        if not item:
+            raise ItemNotFoundException
+        if item.user_id == user_id:
+            raise BookingForbiddenException
+
         try:
 
             booking = await self._db.bookings.add_booking(booking_data)
@@ -28,11 +35,12 @@ class BookingsService(BaseService):
 
     async def edit_booking(self, data: BookingPatchSchema, booking_id: int, user_id: int):
         booking = await self._db.bookings.get_one_or_none(id=booking_id)
-        if booking.owner_id != user_id:
-            raise
+        if booking.rent_id != user_id:
+            raise BookingCancelAccessDeniedException
 
         try:
             booking = await self._db.bookings.edit(data, id=booking_id)
+            await self._db.commit()
 
         except ObjectNotFoundException:
             raise BookingNotFoundException

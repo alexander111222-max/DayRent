@@ -1,19 +1,22 @@
-from celery.bin.control import status
-from dns.e164 import query
+
 from fastapi import APIRouter, HTTPException
 
 from backend.src.api.dependencies import DBDep, user_idDep
+from backend.src.connectors.rebbit_mq import broker
+
 from backend.src.models.bookings import StatusEnum
 from backend.src.schemas.bookings import BookingsAddRequestSchema, BookingPatchSchema
 from backend.src.services.bookings import BookingsService
 from backend.src.services.users import UserService
 from backend.src.utils.exceptions import BookingsAlreadyTakenError, BookingNotFoundException, \
-    MultipleBookingsFoundException
-from faststream.rabbit.fastapi import RabbitRouter
+    MultipleBookingsFoundException, BookingCancelAccessDeniedException, ItemNotFoundException, BookingForbiddenException
+from faststream.rabbit import RabbitExchange, ExchangeType
 import logging
 logger = logging.getLogger(__name__)
-router = RabbitRouter(prefix="/bookings", tags=["Бронирования"])
+router = APIRouter(prefix="/bookings", tags=["bookings"])
 
+
+booking_exchange = RabbitExchange("booking_exchange", type=ExchangeType.TOPIC)
 
 
 @router.post("/")
@@ -28,6 +31,10 @@ async def add_booking(data: BookingsAddRequestSchema, db: DBDep, user_id: user_i
     except BookingsAlreadyTakenError:
         logger.debug(f"Попытка забронировать в даты недоступные для брони от пользователя с id {user_id}")
         raise HTTPException(status_code=409, detail="Нельзя забронировать на данный период, вещь уже забронирована в одну их этих дат")
+    except ItemNotFoundException as e:
+        raise HTTPException(status_code=404, detail=f"{e}")
+    except BookingForbiddenException as e:
+        raise HTTPException(status_code=403, detail=f"{e}")
     logger.debug(f"Добавлена бронь с id {booking.id}")
     user_owner = await UserService(db).get_user(id=data.owner_id)
     user_rent = await UserService(db).get_user(id=user_id)
@@ -45,7 +52,10 @@ async def add_booking(data: BookingsAddRequestSchema, db: DBDep, user_id: user_i
             "email": user_rent.email,
         },
     }
-    await router.broker.publish(message=booking_data, queue="bookings", content_type="application/json")
+    await broker.publish(message=booking_data,
+                         exchange=booking_exchange,
+                         routing_key="booking.create",
+                         content_type="application/json")
     return booking
 
 
@@ -53,11 +63,12 @@ async def add_booking(data: BookingsAddRequestSchema, db: DBDep, user_id: user_i
 
 
 @router.post("/cancel")
-async def cancel_booking(booking_id: int, db: DBDep):
+async def cancel_booking(booking_id: int, db: DBDep, user_id: user_idDep):
     try:
         new_booking = await BookingsService(db).edit_booking(
             BookingPatchSchema(status=StatusEnum.CANCELLED),
-            id=booking_id,
+            booking_id=booking_id,
+            user_id=user_id
         )
     except BookingNotFoundException:
         raise HTTPException(
@@ -69,6 +80,8 @@ async def cancel_booking(booking_id: int, db: DBDep):
             status_code=500,
             detail="Найдено несколько бронирований с одинаковым идентификатором",
         )
+    except BookingCancelAccessDeniedException as e:
+        raise HTTPException(status_code=403, detail=f"{e}")
 
     return new_booking
 

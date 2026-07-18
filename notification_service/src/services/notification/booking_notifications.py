@@ -32,8 +32,6 @@ class BookingNotificationsService:
         await EmailService.sent_to_email(data["renter"]["email"], subject, html)
 
 
-
-
     @classmethod
     async def booking_cancel(cls, data: dict):
         subject = "Отмена брони"

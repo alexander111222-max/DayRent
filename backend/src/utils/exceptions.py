@@ -55,7 +55,8 @@ class BookingsAlreadyTakenError(DayRentException):
 
 
 
-
+class BookingForbiddenException(DayRentException):
+    detail = "Невозможно забронировать собственную вещь"
 
 
 
@@ -77,7 +78,8 @@ class BookingNotFoundException(DayRentException):
 class MultipleBookingsFoundException(DayRentException):
     detail = "Слишком много таких броней не найдено"
 
-
+class BookingCancelAccessDeniedException(DayRentException):
+    detail = "Вы не можете отменить не свою бронь"
 
 class WrongPasswordException(DayRentException):
     detail = "Пароль неверный"
