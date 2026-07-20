@@ -12,7 +12,7 @@ class BookingsService(BaseService):
 
 
     async def add_booking(self, data: BookingsAddRequestSchema, user_id: int):
-        booking_data = BookingsAddSchema(**data.model_dump(), status=StatusEnum.ACTIVE, rent_id=user_id)
+        booking_data = BookingsAddSchema(**data.model_dump(), status=StatusEnum.PENDING, rent_id=user_id)
         item = await self._db.items.get_one_or_none(id=data.item_id)
         if not item:
             raise ItemNotFoundException
@@ -35,7 +35,7 @@ class BookingsService(BaseService):
 
     async def edit_booking(self, data: BookingPatchSchema, booking_id: int, user_id: int):
         booking = await self._db.bookings.get_one_or_none(id=booking_id)
-        if booking.rent_id != user_id:
+        if booking.rent_id != user_id and booking.owner_id != user_id:
             raise BookingCancelAccessDeniedException
 
         try:

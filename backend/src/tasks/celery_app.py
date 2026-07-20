@@ -16,8 +16,12 @@ celery_instance = Celery(
 )
 
 celery_instance.conf.beat_schedule = {
-    "dayrent": {
+    "change-to-completed": {
         "task": "change_to_completed",
+        "schedule": crontab(minute=1, hour=0)
+    },
+    "change-to-active": {
+        "task": "change_to_active",
         "schedule": crontab(minute=1, hour=0)
     }
 }

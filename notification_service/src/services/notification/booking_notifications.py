@@ -35,8 +35,22 @@ class BookingNotificationsService:
     @classmethod
     async def booking_cancel(cls, data: dict):
         subject = "Отмена брони"
-        message_html_to_owner = (f"<p>Произошла отмена брони с"
-                        f"<strong>{data["booking"]["date_from"]}</strong> по <strong>{data["booking"]["date_to"]}</strong>"
-                        f"<br>Пожалуйста перейдите на сайт для просмотра подробностей</p>")
-        await EmailService.sent_to_email(data["owner"]["email"], subject, message_html_to_owner)
+        if data["cancelled_user"] == "owner":
+            message_html_to_renter = cls.get_email_template(
+                "booking_cancelled_for_renter.html",
+                date_from=data["booking"]["date_from"],
+                date_to=data["booking"]["date_to"],
+                owner_email=data["owner"]["email"],
+            )
+
+            await EmailService.sent_to_email(data["renter"]["email"], subject, message_html_to_renter)
+
+        elif data["cancelled_user"] == "renter":
+            message_html_to_owner = cls.get_email_template(
+                "booking_cancelled_for_owner.html",
+                date_from=data["booking"]["date_from"],
+                date_to=data["booking"]["date_to"],
+                renter_email=data["renter"]["email"],
+            )
+            await EmailService.sent_to_email(data["owner"]["email"], subject, message_html_to_owner)
 

@@ -28,7 +28,7 @@ async def delete_from_basket(item_id: int, user_id: user_idDep, db: DBDep):
         deleted_item = await BasketsService(db).delete(item_id=item_id, user_id=user_id)
     except ItemInBasketNotFoundException:
         logger.warning("Удаление несуществующей вещи")
-        raise HTTPException(status_code=404, detail="Такой вещи не найдено")
+        raise HTTPException(status_code=404, detail="Такой вещи у вас не найдено")
     return deleted_item
 
 

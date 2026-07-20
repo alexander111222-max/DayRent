@@ -13,7 +13,7 @@ class EmailService:
     @classmethod
     async def sent_to_email(cls, email: str, subject: str, html: str):
         r = resend.Emails.send({
-            "from": "onboarding@resend.dev",
+            "from": "info@day-rent.ru",
             "to": email,
             "subject": subject,
             "html": html

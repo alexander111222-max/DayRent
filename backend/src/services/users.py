@@ -2,6 +2,7 @@ import time
 from datetime import timedelta, datetime, timezone
 
 from argon2 import hash_password
+from celery.worker.consumer.mingle import exception
 from wtforms.validators import email
 
 from backend.src.config import settings
@@ -53,8 +54,9 @@ class UserService(BaseService):
 
 
     async def login(self, data: UserLoginSchema):
-        user = await self._db.users.get_user_with_hash_password(email=data.email)
-        if not user:
+        try:
+            user = await self._db.users.get_user_with_hash_password(email=data.email)
+        except ObjectNotFoundException:
             raise UserNotFoundException
 
         if not AuthService().verify_password(data.password, user.hash_password):

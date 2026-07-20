@@ -13,8 +13,9 @@ async def get_booking_message(data: dict):
     if data["event"] == "booking_created":
         await BookingNotificationsService.booking_create(data)
 
-    elif data["event"] == "booking_canceled":
+    elif data["event"] == "booking_cancelled":
         await BookingNotificationsService.booking_cancel(data)
+
 
 
 
