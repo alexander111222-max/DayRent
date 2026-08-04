@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import Numeric
+from sqlalchemy import Numeric, false
 from sqlalchemy.orm import Mapped, mapped_column
 from decimal import Decimal
 from backend.src.database import Base
@@ -14,9 +14,14 @@ class UsersOrm(Base):
     surname: Mapped[str]
     age: Mapped[int]
     phone: Mapped[str]
-    email: Mapped[str]
+    email: Mapped[str] = mapped_column(unique=True)
     city: Mapped[str]
     address: Mapped[str]
     hash_password: Mapped[str]
     lat: Mapped[Optional[Decimal]] = mapped_column(Numeric, nullable=True)
     lon: Mapped[Optional[Decimal]] = mapped_column(Numeric, nullable=True)
+    is_verified: Mapped[bool] = mapped_column(
+        default=False,
+        server_default=false(),
+        nullable=False
+    )

@@ -1,5 +1,6 @@
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from backend.src.api.dependencies import user_idDep, DBDep
 from backend.src.schemas.baskets import BasketAddSchema
@@ -17,12 +18,12 @@ async def get_basket(db: DBDep, user_id: user_idDep):
     return basket
 
 @router.post("/")
-async def add_to_basket(db: DBDep, item_id: int, user_id: user_idDep):
+async def add_to_basket(db: DBDep, item_id: Annotated[int, Query(ge=1, le=2147483647)], user_id: user_idDep):
     item_in_basket = await BasketsService(db).add_to_basket(BasketAddSchema(item_id=item_id, user_id=user_id))
     return item_in_basket
 
 @router.delete("/")
-async def delete_from_basket(item_id: int, user_id: user_idDep, db: DBDep):
+async def delete_from_basket(item_id: Annotated[int, Query(ge=1, le=2147483647)], user_id: user_idDep, db: DBDep):
 
     try:
         deleted_item = await BasketsService(db).delete(item_id=item_id, user_id=user_id)

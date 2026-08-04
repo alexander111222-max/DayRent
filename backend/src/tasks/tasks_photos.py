@@ -46,10 +46,12 @@ async def _process_single_photo(
         await db.commit()
 
 
-@celery_instance.task(bind=True, max_retries=3, default_retry_delay=5)
-def upload_single_photo(self, file_content: bytes, position: int, item_id: int) -> None:
+@celery_instance.task(bind=True, max_retries=3)
+def upload_single_photo(self, file_content, position, item_id):
     try:
-        async_to_sync(_process_single_photo)(file_content, position, item_id)
+        asyncio.run(
+            _process_single_photo(file_content, position, item_id)
+        )
     except Exception as exc:
         raise self.retry(exc=exc)
 

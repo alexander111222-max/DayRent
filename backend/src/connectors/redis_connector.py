@@ -38,3 +38,11 @@ class RedisManager:
     async def close(self):
         if self._redis:
             await self._redis.close()
+
+    async def incr(self, key: str) -> int:
+        return await self._redis.incr(key)
+
+    async def expire(self, key: str, seconds: int):
+        await self._redis.expire(key, seconds)
+
+

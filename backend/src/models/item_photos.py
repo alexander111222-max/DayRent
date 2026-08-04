@@ -10,3 +10,6 @@ class ItemPhotosOrm(Base):
     item_id: Mapped[int] = mapped_column(ForeignKey("items.id", ondelete="CASCADE"))
     position: Mapped[int] # STARTED WITH 1
     is_main: Mapped[bool]
+
+
+

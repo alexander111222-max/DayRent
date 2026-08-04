@@ -14,6 +14,7 @@ class UserSchema(BaseModel):
     address: str
     lat: Decimal | None
     lon: Decimal | None
+    is_verified: bool
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -87,4 +88,5 @@ class UserPatchSchema(BaseModel):
     email: EmailStr | None = None
     city: str | None = None
     address: str | None = None
+    is_verified: bool | None = None
     

@@ -1,11 +1,14 @@
-from typing import List
-from fastapi import APIRouter, HTTPException, UploadFile
+from typing import List, Annotated
+from fastapi import APIRouter, HTTPException, UploadFile, Path, Query
 
-from backend.src.schemas.search import DocumentIn
+from backend.src.models.photos_url import PhotoSize
+from backend.src.schemas.search import DocumentIn, DocumentUpdate
 from backend.src.api.dependencies import DBDep, user_idDep
 from backend.src.schemas.items import ItemAddRequestSchema, ItemEditSchema
+from backend.src.services.item_photos import ItemPhotosService
 from backend.src.services.items import ItemsService
-from backend.src.services.search import create_doc
+from backend.src.services.photos_url import PhotosUrlService
+from backend.src.services.search import create_doc, update_doc
 from backend.src.utils.exceptions import MultipleItemFoundException, ItemNotFoundException, CategoryNotFoundException, \
     ForbiddenException
 from backend.src.tasks.tasks_geocode import geocode_item
@@ -35,13 +38,15 @@ async def add_item(data: ItemAddRequestSchema, db: DBDep, user_id: user_idDep):
 
 
 @router.patch("/")
-async def edit_item(data: ItemEditSchema, item_id: int, db: DBDep, user_id: user_idDep):
+async def edit_item(data: ItemEditSchema, item_id: Annotated[int, Query(ge=1, le=2147483647)], db: DBDep, user_id: user_idDep):
 
     try:
         if data.address:
             geocode_item.delay(item_id, data.address)
 
         edited_item = await ItemsService(db).edit(data, user_id, item_id, id=item_id)
+        await update_doc(edited_item.id, DocumentUpdate(**data.model_dump(exclude_unset=True)))
+
         return edited_item
     except MultipleItemFoundException:
         logger.error(f"Более одной вещи с id {item_id}")
@@ -60,7 +65,7 @@ async def edit_item(data: ItemEditSchema, item_id: int, db: DBDep, user_id: user
 
 
 @router.delete("/{item_id}")
-async def delete_item(item_id: int, db: DBDep, user_id: user_idDep):
+async def delete_item(item_id: Annotated[int, Path(ge=1, le=2147483647)], db: DBDep, user_id: user_idDep):
     try:
         deleted_item = await ItemsService(db).delete_item(user_id, item_id)
     except ItemNotFoundException:
@@ -76,8 +81,12 @@ async def delete_item(item_id: int, db: DBDep, user_id: user_idDep):
 
 
 @router.post("/{item_id}/photos")
-async def load_photos(files: List[UploadFile], item_id: int):
-
+async def load_photos(files: List[UploadFile], item_id: Annotated[int, Path(ge=1, le=2147483647)], db: DBDep, user_id: user_idDep):
+    item = await ItemsService(db).get_item_one_or_none_by_id(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Вещь не найдена")
+    if item.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Вы не можете загрузить фото для не своей вещи")
     files_data = []
     for file in files:
         content = await file.read()
@@ -89,3 +98,9 @@ async def load_photos(files: List[UploadFile], item_id: int):
     upload_photos.delay(files_data, item_id)
     logger.info(f"Загрузились фотографии для вещи с id {item_id}")
     return {"status": "ok"}
+
+
+@router.get("/{item_id}/photos")
+async def get_item_photos(item_id: int, size: PhotoSize, db: DBDep):
+    item_photos = await ItemPhotosService(db).get_filter_by(item_id=item_id)
+    photos_url = await PhotosUrlService(db).get_filter_by(photo_id.in_(item_photo.id for item_photo in item_photos))

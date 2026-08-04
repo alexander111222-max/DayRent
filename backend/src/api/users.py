@@ -1,6 +1,7 @@
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
-from backend.src.api.dependencies import DBDep
+from fastapi import APIRouter, HTTPException, Path
+from backend.src.api.dependencies import DBDep, RequireAdminDep
 from backend.src.services.users import UserService
 from backend.src.utils.exceptions import UserNotFoundException
 
@@ -12,14 +13,19 @@ router = APIRouter(prefix="/user", tags=["users"])
 
 
 @router.delete("/{user_id}")
-async def delete_user(user_id: int, db: DBDep):
-    deleted_user = await UserService(db).delete_user(id=user_id)
+async def delete_user(user_id: Annotated[int, Path(ge=1, le=2147483647)], db: DBDep, req_admin: RequireAdminDep):
+    try:
+        deleted_user = await UserService(db).delete_user(id=user_id)
+    except UserNotFoundException:
+        logger.warning(f"Пользователь с id {user_id} не найден")
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+
     logger.info(f"Пользователь с id {user_id} удалён")
     return deleted_user
 
 
 @router.get("/{user_id}")
-async def get_user(db: DBDep, user_id: int):
+async def get_user(db: DBDep, user_id: Annotated[int, Path(ge=1, le=2147483647)], req_admin: RequireAdminDep):
     try:
         user = await UserService(db).get_user(id=user_id)
     except UserNotFoundException:

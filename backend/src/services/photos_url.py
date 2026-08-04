@@ -10,3 +10,8 @@ class PhotosUrlService(BaseService):
         photo_url = await self._db.photos_url.add_one(data)
         await self._db.commit()
         return photo_url
+
+
+    async def get_filter_by(self, *filters, **filter_by):
+        photos_utl = await self._db.photos_url.get_filter_by(*filters, **filter_by)
+        return photos_utl

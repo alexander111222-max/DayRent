@@ -29,8 +29,10 @@ class UserService(BaseService):
         return user
 
     async def add_one(self, data: UserAddSchema):
-
-        added_user = await self._db.users.add_one(data)
+        try:
+            added_user = await self._db.users.add_one(data)
+        except ObjectAlreadyExistsException:
+            raise UserAlreadyExistsException
         await self._db.commit()
 
         return added_user
@@ -45,10 +47,12 @@ class UserService(BaseService):
             raise UserAlreadyExistsException
 
         hashed_password = AuthService().get_password_hash(data.password)
-
-        user = await self.add_one(
-            UserAddSchema(**data.model_dump(exclude={"password", "password_confirm"}), hash_password=hashed_password)
-        )
+        try:
+            user = await self.add_one(
+                UserAddSchema(**data.model_dump(exclude={"password", "password_confirm"}), hash_password=hashed_password)
+            )
+        except UserAlreadyExistsException:
+            raise UserAlreadyExistsException
 
         return user
 
@@ -62,7 +66,7 @@ class UserService(BaseService):
         if not AuthService().verify_password(data.password, user.hash_password):
             raise WrongPasswordException
 
-        token = AuthService().create_token({"user_id": user.id, "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.TTL)})
+        token = AuthService().create_token({"user_id": user.id, "role": "user", "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.TTL)})
         return token
 
     async def get_user(self, **filter_by):
@@ -85,6 +89,8 @@ class UserService(BaseService):
 
     async def delete_user(self, *filters, **filter_by):
         deleted_user = await self._db.users.delete(*filters, **filter_by)
+        if deleted_user is None:
+            raise UserNotFoundException
         await self._db.commit()
         return deleted_user
 

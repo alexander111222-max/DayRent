@@ -30,8 +30,8 @@ class AuthService:
         except ExpiredSignatureError:
             raise TokenExpiredException("Токен протух")
 
-        user_id = payload["user_id"]
-        return user_id
+
+        return payload
 
     def get_password_hash(self, password):
         return self.pwd_context.hash(password)

@@ -40,7 +40,7 @@ class BookingsRepository(BaseRepository):
             self._model.item_id == data.item_id,
             self._model.date_from < data.date_to,
             self._model.date_to > data.date_from,
-            self._model.status == StatusEnum.ACTIVE
+            or_(self._model.status == StatusEnum.ACTIVE, self._model.status == StatusEnum.PENDING)
         )
 
         if bookings:

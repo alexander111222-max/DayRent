@@ -15,6 +15,6 @@ class PhotoSize(str, Enum):
 class PhotosUrlOrm(Base):
     __tablename__ = "photosUrl"
     id: Mapped[int] = mapped_column(primary_key=True)
-    photo_id: Mapped[int] = mapped_column(ForeignKey("itemPhotos.id"))
+    photo_id: Mapped[int] = mapped_column(ForeignKey("itemPhotos.id", ondelete="CASCADE"))
     size: Mapped[PhotoSize]
     url: Mapped[str]

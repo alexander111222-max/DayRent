@@ -1,6 +1,7 @@
 from datetime import date
 from backend.src.services.base import BaseService
 from backend.src.schemas.items import ItemAddSchema, ItemAddRequestSchema, ItemEditSchema, CoordinateItem
+from backend.src.services.search import delete_doc
 from backend.src.utils.exceptions import ObjectNotFoundException, ItemNotFoundException, MultipleObjectsFoundException, \
     MultipleItemFoundException, CategoryNotFoundException, ForbiddenException
 
@@ -80,6 +81,7 @@ class ItemsService(BaseService):
             raise ForbiddenException
 
         deleted_item = await self._db.items.delete(id=item_id)
+        await delete_doc(item.id)
         await self._db.commit()
         return deleted_item
 
@@ -87,3 +89,7 @@ class ItemsService(BaseService):
     async def get_items_by_user_id(self, user_id: int):
         items = await self._db.items.get_filter_by(user_id=user_id)
         return items
+
+    async def get_item_one_or_none_by_id(self, item_id: int):
+        item = await self._db.items.get_one_or_none(id=item_id)
+        return item

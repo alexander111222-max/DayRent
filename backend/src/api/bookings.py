@@ -1,5 +1,6 @@
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from backend.src.api.dependencies import DBDep, user_idDep
 from backend.src.connectors.rebbit_mq import broker
@@ -60,7 +61,7 @@ async def add_booking(data: BookingsAddRequestSchema, db: DBDep, user_id: user_i
 
 
 @router.post("/cancel")
-async def cancel_booking(booking_id: int, db: DBDep, user_id: user_idDep):
+async def cancel_booking(booking_id: Annotated[int, Query(ge=1, le=2147483647)], db: DBDep, user_id: user_idDep):
     try:
         booking = await BookingsService(db).get_bookings_by_filter(id=booking_id)
         if booking[0].status == StatusEnum.CANCELLED:

@@ -55,7 +55,18 @@ async def update_doc(doc_id: int, doc: DocumentUpdate):
         id=str(doc_id),
         doc=doc.model_dump(exclude_unset=True)
     )
+
     return doc_id
+
+async def delete_doc(doc_id: int):
+    es = get_es_client()
+
+    await es.delete(
+        index=settings.ES_INDEX,
+        id=str(doc_id)
+    )
+
+
 
 
 async def search(req: SearchRequestSchema, pag_params: PaginationParams, user_id: int):

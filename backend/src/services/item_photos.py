@@ -12,4 +12,6 @@ class ItemPhotosService(BaseService):
         return item_photo
 
 
-
+    async def get_filter_by(self, *filters, **filter_by):
+        item_photos = await self._db.item_photos.get_filter_by(*filters, **filter_by)
+        return item_photos

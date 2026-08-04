@@ -1,7 +1,8 @@
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
-from backend.src.api.dependencies import PaginationDep, user_idDep, DBDep, user_idDep_optional
+from backend.src.api.dependencies import PaginationDep, DBDep, user_idDep_optional
 from backend.src.schemas.search import SearchRequestSchema, Location
 from backend.src.services.items import ItemsService
 from backend.src.services.search import search
@@ -19,10 +20,10 @@ async def search_items(
         user_id: user_idDep_optional,
         db: DBDep,
         query: str | None = None,
-        price_from: int | None = None,
-        price_to: int | None = None,
+        price_from: Annotated[int | None, Query(ge=1, le=2147483647)] = None,
+        price_to: Annotated[int | None, Query(ge=1, le=2147483647)] = None,
         city: str | None = None,
-        category_id: int | None = None,
+        category_id: Annotated[int | None, Query(ge=1, le=2147483647)] = None,
         nearby: bool | None = None
         ):
     if user_id is not None:

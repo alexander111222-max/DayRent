@@ -40,3 +40,9 @@ async def get_completed_bookings(db: DBDep, user_id: user_idDep):
 
     bookings = await BookingsService(db).get_bookings_by_filter(rent_id=user_id, status=StatusEnum.COMPLETED)
     return bookings
+
+@router.get("/pending")
+async def get_completed_bookings(db: DBDep, user_id: user_idDep):
+
+    bookings = await BookingsService(db).get_bookings_by_filter(rent_id=user_id, status=StatusEnum.PENDING)
+    return bookings

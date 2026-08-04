@@ -45,7 +45,7 @@ class RefreshTokensService(BaseService):
             raise UserNotFoundException
 
 
-        access_token = AuthService().create_token({"user_id": user.id, "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.TTL)})
+        access_token = AuthService().create_token({"user_id": user.id, 'role': "user", "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.TTL)})
         return access_token
 
     async def revoke_refresh_token(self, user_id: int):

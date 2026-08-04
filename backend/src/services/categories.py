@@ -2,6 +2,7 @@ from unicodedata import category
 
 from backend.src.schemas.categories import CategoryAddSchema
 from backend.src.services.base import BaseService
+from backend.src.utils.exceptions import CategoryNotFoundException
 
 
 class CategoriesService(BaseService):
@@ -22,5 +23,7 @@ class CategoriesService(BaseService):
         return categories
     async def delete_category(self, *filters, **filter_by):
         deleted_category = await self._db.categories.delete(*filters, **filter_by)
+        if deleted_category is None:
+            raise CategoryNotFoundException
         await self._db.commit()
         return deleted_category
