@@ -2,10 +2,10 @@
 from functools import partial
 from io import BytesIO
 import asyncio
-from PIL import Image
+from PIL import Image, ImageOps
 import logging
 logger = logging.getLogger(__name__)
-from backend.src.utils.s3 import s3_client
+from backend.src.connectors.s3 import s3_client
 
 PHOTO_SIZES = {
     (240, 240): "small",
@@ -38,18 +38,33 @@ async def _resize_and_upload(
     return url, label
 
 
+def to_rgb(img: Image.Image) -> Image.Image:
+    if img.mode == "RGB":
+        return img
+    if img.mode in ("RGBA", "LA", "P"):
+        img = img.convert("RGBA")
+        background = Image.new("RGB", img.size, (255, 255, 255))
+        background.paste(img, mask=img.split()[-1])
+        return background
+    return img.convert("RGB")
+
+
+def _prepare_image(file_io: BytesIO) -> Image.Image:
+    file_io.seek(0)
+    image = Image.open(file_io)
+    image.load()                          # форсируем чтение, пока буфер жив
+    image = ImageOps.exif_transpose(image) # поворот по EXIF (фото с телефона)
+    return to_rgb(image)                   # RGBA/P/CMYK → RGB для JPEG
+
+
 async def process_and_upload(
     file_io: BytesIO,
     item_id: int,
     photo_id: int,
 ) -> list[tuple[str, str]]:
-
     loop = asyncio.get_running_loop()
 
-    file_io.seek(0)
-    image = await loop.run_in_executor(None, Image.open, file_io)
-    # Image.open — ленивый, load() форсирует чтение до закрытия буфера
-    await loop.run_in_executor(None, image.load)
+    image = await loop.run_in_executor(None, _prepare_image, file_io)
 
     tasks = [
         _resize_and_upload(image, dimensions, label, item_id, photo_id)

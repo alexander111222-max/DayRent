@@ -1,45 +1,49 @@
-import { useQuery } from '@tanstack/react-query'
-import { profilesApi, searchApi } from '@/api'
-import { useAuthStore } from '@/store/authStore'
-import type { Item } from '@/types'
+import { useEffect, useRef } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { itemsApi } from '@/api'
 
-async function findItemById(itemId: number, isAuthenticated: boolean): Promise<Item | null> {
-  if (isAuthenticated) {
-    try {
-      const profile = await profilesApi.get()
-      const fromProfile = profile.items.find((item) => item.id === itemId)
-      if (fromProfile) {
-        return fromProfile
-      }
-    } catch {
-      // fall through to search
-    }
+const PHOTOS_POLL_INTERVAL_MS = 2000
+const PHOTOS_POLL_TIMEOUT_MS = 60_000
+
+// Состояние навигации после загрузки фото: фото обрабатываются в Celery асинхронно,
+// поэтому страница вещи ждёт, пока их станет expectedPhotos
+export interface PendingPhotosState {
+  pendingPhotos?: {
+    expected: number
+    startedAt: number
   }
-
-  let page = 1
-  const perPage = 30
-
-  while (page <= 10) {
-    const { total, items } = await searchApi.search({ page, per_page: perPage })
-    const found = items.find((item) => item.id === itemId)
-    if (found) {
-      return found
-    }
-    if (page * perPage >= total) {
-      break
-    }
-    page += 1
-  }
-
-  return null
 }
 
-export function useItem(itemId: number) {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+export function useItem(itemId: number, pendingPhotos?: PendingPhotosState['pendingPhotos']) {
+  const queryClient = useQueryClient()
 
-  return useQuery({
-    queryKey: ['item', itemId, isAuthenticated],
-    queryFn: () => findItemById(itemId, isAuthenticated),
+  const isWaiting = (photosCount: number | undefined) =>
+    Boolean(pendingPhotos) &&
+    (photosCount ?? 0) < pendingPhotos!.expected &&
+    Date.now() - pendingPhotos!.startedAt < PHOTOS_POLL_TIMEOUT_MS
+
+  const query = useQuery({
+    queryKey: ['item', itemId],
+    queryFn: () => itemsApi.get(itemId),
     enabled: itemId > 0,
+    refetchInterval: (q) =>
+      isWaiting(q.state.data?.photos_urls?.length) ? PHOTOS_POLL_INTERVAL_MS : false,
   })
+
+  const photosCount = query.data?.photos_urls?.length
+  const isPhotosProcessing = query.isSuccess && isWaiting(photosCount)
+
+  // Когда фото доехали — обновляем списки, где показывается главное фото
+  const wasProcessing = useRef(false)
+  useEffect(() => {
+    if (isPhotosProcessing) {
+      wasProcessing.current = true
+    } else if (wasProcessing.current) {
+      wasProcessing.current = false
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['search'] })
+    }
+  }, [isPhotosProcessing, queryClient])
+
+  return { ...query, isPhotosProcessing }
 }

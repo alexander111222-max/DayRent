@@ -30,7 +30,7 @@ class ItemsService(BaseService):
         return added_item
 
     async def get_items_by_ids(self, ids: list[int]):
-        items = await self._db.items.get_all_by_id(ids)
+        items = await self._db.items.get_by_ids(ids)
         return items
 
 

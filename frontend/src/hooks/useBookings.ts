@@ -32,6 +32,19 @@ export function useBookings() {
 
 
 
+  // Ручки /profile/confirmed может ещё не быть на бэке — тогда 404 и секция просто пустая
+  const confirmedQuery = useQuery({
+
+    queryKey: ['bookings', 'confirmed'],
+
+    queryFn: profilesApi.getConfirmedBookings,
+
+    retry: false,
+
+  })
+
+
+
   const completedQuery = useQuery({
 
     queryKey: ['bookings', 'completed'],
@@ -73,6 +86,8 @@ export function useBookings() {
   return {
 
     pendingBookings: pendingQuery.data ?? [],
+
+    confirmedBookings: [...(confirmedQuery.data ?? [])].sort((a, b) => a.date_from.localeCompare(b.date_from)),
 
     activeBookings: activeQuery.data ?? [],
 

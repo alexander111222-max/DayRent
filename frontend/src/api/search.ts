@@ -36,8 +36,5 @@ export const searchApi = {
           },
         },
       })
-      .then((r) => {
-        const [total, items] = r.data
-        return { total, items }
-      }),
+      .then((r) => r.data),
 }

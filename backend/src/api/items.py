@@ -1,18 +1,26 @@
 from typing import List, Annotated
 from fastapi import APIRouter, HTTPException, UploadFile, Path, Query
+from sqlalchemy import or_
 
-from backend.src.models.photos_url import PhotoSize
+from backend.src.connectors.s3 import s3_client
+from backend.src.models import UsersOrm, BookingsOrm
+from backend.src.models.bookings import StatusEnum
+from backend.src.schemas.bookings import BookingWithRenter
+from backend.src.schemas.item_photos import ItemPhotosSchemaWithUrl
 from backend.src.schemas.search import DocumentIn, DocumentUpdate
 from backend.src.api.dependencies import DBDep, user_idDep
-from backend.src.schemas.items import ItemAddRequestSchema, ItemEditSchema
+from backend.src.schemas.items import ItemAddRequestSchema, ItemEditSchema, ItemSchemaWithPhotos
+from backend.src.schemas.users import RenterSchema
+from backend.src.services.ItemPhotosS3 import ItemPhotosS3Manager, SizePhotos
+from backend.src.services.bookings import BookingsService
 from backend.src.services.item_photos import ItemPhotosService
 from backend.src.services.items import ItemsService
-from backend.src.services.photos_url import PhotosUrlService
 from backend.src.services.search import create_doc, update_doc
+from backend.src.services.users import UserService
 from backend.src.utils.exceptions import MultipleItemFoundException, ItemNotFoundException, CategoryNotFoundException, \
     ForbiddenException
 from backend.src.tasks.tasks_geocode import geocode_item
-from backend.src.tasks.tasks_photos import upload_photos
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -79,28 +87,49 @@ async def delete_item(item_id: Annotated[int, Path(ge=1, le=2147483647)], db: DB
 
 
 
-
-@router.post("/{item_id}/photos")
-async def load_photos(files: List[UploadFile], item_id: Annotated[int, Path(ge=1, le=2147483647)], db: DBDep, user_id: user_idDep):
+@router.get("/{item_id}", response_model=ItemSchemaWithPhotos)
+async def get_item(item_id: int, db: DBDep):
     item = await ItemsService(db).get_item_one_or_none_by_id(item_id)
-    if not item:
-        raise HTTPException(status_code=404, detail="Вещь не найдена")
-    if item.user_id != user_id:
-        raise HTTPException(status_code=403, detail="Вы не можете загрузить фото для не своей вещи")
-    files_data = []
-    for file in files:
-        content = await file.read()
-        files_data.append({
-            "filename": file.filename,
-            "content": content
-        })
 
-    upload_photos.delay(files_data, item_id)
-    logger.info(f"Загрузились фотографии для вещи с id {item_id}")
-    return {"status": "ok"}
-
-
-@router.get("/{item_id}/photos")
-async def get_item_photos(item_id: int, size: PhotoSize, db: DBDep):
     item_photos = await ItemPhotosService(db).get_filter_by(item_id=item_id)
-    photos_url = await PhotosUrlService(db).get_filter_by(photo_id.in_(item_photo.id for item_photo in item_photos))
+    photos_ids = [photo.id for photo in item_photos]
+    item_photos_s3_manager = ItemPhotosS3Manager(s3_client)
+
+    list_photos = await item_photos_s3_manager.get_photos(item_id, photos_ids, SizePhotos.MEDIUM) # список [(photo_id, url), ....)
+    new_dict = {}                                                                                         # словарь из photo_id: url
+    for photo_id, url in list_photos:
+        new_dict[photo_id] = url
+
+    new_photo_items = [ItemPhotosSchemaWithUrl(**photo_item.model_dump()) for photo_item in item_photos]  # тут теперь ItemPhotosSchemaWithUrl полная схема, фото с урл
+
+    for i in range(len(new_photo_items)):
+        el = new_photo_items[i]
+        new_photo_items[i].url = new_dict[el.id]
+
+    return ItemSchemaWithPhotos(**item.model_dump(), photos_urls=new_photo_items)
+
+
+
+
+@router.get("/{item_id}/bookings")
+async def get_bookings_item(item_id: int, db: DBDep, user_id: user_idDep) -> list[BookingWithRenter]:
+    item = await ItemsService(db).get_item_one_or_none_by_id(item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Такой вещи не найдено.")
+    if item.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Доступ к просмотру бронированйи не своей вещи запрещен.")
+
+    bookings = await BookingsService(db).get_bookings_by_filter(or_(BookingsOrm.status == StatusEnum.ACTIVE, BookingsOrm.status == StatusEnum.CONFIRMED), item_id=item_id)
+    renter_ids = [booking.rent_id for booking in bookings]
+    renters = await UserService(db).get_users_filter_by(UsersOrm.id.in_(renter_ids))
+    renters_dict = {}
+    for renter in renters:
+        renters_dict[renter.id] = RenterSchema(**renter.model_dump())
+
+    res = [BookingWithRenter(**booking.model_dump(), renter=renters_dict[booking.rent_id]) for booking in bookings]
+
+    return res
+
+
+
+

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { OwnerBookingRequests } from '@/components/bookings/OwnerBookingRequests'
 import { Button, Loader, ErrorMessage } from '@/components/ui'
 import { ItemGrid } from '@/components/items/ItemGrid'
 import { useProfile } from '@/hooks'
@@ -32,6 +33,8 @@ export function MyItemsPage() {
         </Link>
       </div>
 
+      <OwnerBookingRequests hideWhenEmpty />
+
       <ItemGrid
         items={profile.items}
         emptyTitle="У вас пока нет объявлений"
@@ -41,17 +44,25 @@ export function MyItemsPage() {
       {profile.items.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {profile.items.map((item) => (
-            <div key={item.id} className="flex gap-2">
-              <Link to={ROUTES.itemEdit(item.id)} className="flex-1">
-                <Button variant="secondary" className="w-full" size="sm">
-                  Редактировать «{item.title}»
-                </Button>
-              </Link>
-              <Link to={ROUTES.item(item.id)} className="flex-1">
-                <Button variant="ghost" className="w-full" size="sm">
-                  Открыть
-                </Button>
-              </Link>
+            <div key={item.id} className="rounded-2xl border border-violet-100 bg-white p-3 shadow-sm">
+              <p className="mb-2 truncate text-sm font-semibold text-slate-800">{item.title}</p>
+              <div className="flex gap-2">
+                <Link to={ROUTES.itemBookings(item.id)} className="flex-1">
+                  <Button variant="accent" className="w-full" size="sm">
+                    📅 Брони
+                  </Button>
+                </Link>
+                <Link to={ROUTES.itemEdit(item.id)} className="flex-1">
+                  <Button variant="secondary" className="w-full" size="sm">
+                    Изменить
+                  </Button>
+                </Link>
+                <Link to={ROUTES.item(item.id)}>
+                  <Button variant="ghost" size="sm">
+                    Открыть
+                  </Button>
+                </Link>
+              </div>
             </div>
           ))}
         </div>

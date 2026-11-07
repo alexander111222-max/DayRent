@@ -3,6 +3,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
+from backend.src.schemas.item_photos import ItemPhotosSchemaWithUrl
+
 
 class ItemSchema(BaseModel):
     id: int
@@ -19,6 +21,38 @@ class ItemSchema(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+class ItemSchemaWithMainPhotoUrl(BaseModel):
+    id: int
+    title: str
+    price: int
+    description: str
+    city: str
+    address: str
+    lat: Decimal | None
+    lon: Decimal | None
+    user_id: int
+    category_id: int
+    created_at: date
+    main_photo_url: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ItemSchemaWithPhotos(BaseModel):
+    id: int
+    title: str
+    price: int
+    description: str
+    city: str
+    address: str
+    lat: Decimal | None
+    lon: Decimal | None
+    user_id: int
+    category_id: int
+    created_at: date
+    photos_urls: list[ItemPhotosSchemaWithUrl]
+
+    model_config = ConfigDict(from_attributes=True)
 
 class ItemAddRequestSchema(BaseModel):
     title: str
@@ -54,3 +88,8 @@ class ItemEditSchema(BaseModel):
 class CoordinateItem(BaseModel):
     lat: Decimal
     lon: Decimal
+
+
+class SearchResponseSchema(BaseModel):
+    total: int
+    items: list[ItemSchemaWithMainPhotoUrl]

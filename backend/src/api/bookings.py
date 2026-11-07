@@ -1,6 +1,7 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query
+from celery.bin.control import status
+from fastapi import APIRouter, HTTPException, Path
 
 from backend.src.api.dependencies import DBDep, user_idDep
 from backend.src.connectors.rebbit_mq import broker
@@ -37,8 +38,8 @@ async def add_booking(data: BookingsAddRequestSchema, db: DBDep, user_id: user_i
     except BookingForbiddenException as e:
         raise HTTPException(status_code=403, detail=f"{e}")
     logger.debug(f"Добавлена бронь с id {booking.id}")
-    user_owner = await UserService(db).get_user(id=data.owner_id)
-    user_rent = await UserService(db).get_user(id=user_id)
+    user_owner = await UserService(db).get_user_filter_by(id=data.owner_id)
+    user_rent = await UserService(db).get_user_filter_by(id=user_id)
     booking_data = {
         "event": "booking_created",
         "booking": {
@@ -60,20 +61,22 @@ async def add_booking(data: BookingsAddRequestSchema, db: DBDep, user_id: user_i
     return booking
 
 
-@router.post("/cancel")
-async def cancel_booking(booking_id: Annotated[int, Query(ge=1, le=2147483647)], db: DBDep, user_id: user_idDep):
+@router.post("/cancel/{booking_id}")
+async def cancel_booking(booking_id: Annotated[int, Path(ge=1, le=2147483647)], db: DBDep, user_id: user_idDep):
     try:
-        booking = await BookingsService(db).get_bookings_by_filter(id=booking_id)
-        if booking[0].status == StatusEnum.CANCELLED:
+        bookings = await BookingsService(db).get_bookings_by_filter(id=booking_id)
+        if not bookings:
+            raise HTTPException(status_code=404, detail="Бронирование не найдено")
+        if bookings[0].status == StatusEnum.CANCELLED:
             raise HTTPException(status_code=409, detail="Бронь уже отменена")
-        new_booking = await BookingsService(db).edit_booking(
+        new_booking = await BookingsService(db).cancel(
             BookingPatchSchema(status=StatusEnum.CANCELLED),
             booking_id=booking_id,
             user_id=user_id
         )
 
-        user_owner = await UserService(db).get_user(id=new_booking.owner_id)
-        user_rent = await UserService(db).get_user(id=new_booking.rent_id)
+        user_owner = await UserService(db).get_user_filter_by(id=new_booking.owner_id)
+        user_rent = await UserService(db).get_user_filter_by(id=new_booking.rent_id)
     except BookingNotFoundException:
         raise HTTPException(
             status_code=404,
@@ -114,3 +117,15 @@ async def cancel_booking(booking_id: Annotated[int, Query(ge=1, le=2147483647)],
     return new_booking
 
 
+@router.post("/confirm/{booking_id}")
+async def confirm_booking(booking_id: Annotated[int, Path(ge=1, le=2147483647)], user_id: user_idDep, db: DBDep):
+    bookings = await BookingsService(db).get_bookings_by_filter(id=booking_id)
+    if not bookings:
+        raise HTTPException(status_code=404, detail="Бронирование не найдено")
+    booking = bookings[0]
+    if booking.owner_id != user_id:
+        logger.warning(f"Пользователь с id {user_id} попытался подтвердить бронирование не принадлижайшее ему с id {booking_id}")
+        raise HTTPException(status_code=403, detail="Доступ в подтверждении бронирования запрещен")
+
+    await BookingsService(db).confirm(BookingPatchSchema(status=StatusEnum.CONFIRMED), booking_id=booking_id, user_id=user_id)
+    return {"status": "ok"}

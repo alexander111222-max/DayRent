@@ -1,4 +1,4 @@
-export type BookingStatus = 'pending' | 'active' | 'completed' | 'cancelled'
+export type BookingStatus = 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled'
 
 export interface User {
   id: number
@@ -53,6 +53,19 @@ export interface Item {
   user_id: number
   category_id: number
   created_at: string
+  main_photo_url?: string | null
+}
+
+export interface ItemPhotoWithUrl {
+  id: number
+  item_id: number
+  position: number
+  is_main: boolean
+  url: string | null
+}
+
+export interface ItemWithPhotos extends Item {
+  photos_urls: ItemPhotoWithUrl[]
 }
 
 export interface ItemCreateRequest {
@@ -98,6 +111,17 @@ export interface Booking {
   owner_id: number
   rent_id: number
   total_cost: number
+}
+
+export interface Renter {
+  username: string
+  surname: string
+  phone: string
+  email: string
+}
+
+export interface BookingWithRenter extends Booking {
+  renter: Renter
 }
 
 export interface BookingCreateRequest {
@@ -183,4 +207,7 @@ export interface VerifyEmailResponse {
   verify: boolean
 }
 
-export type SearchResponse = [number, Item[]]
+export interface SearchResponse {
+  total: number
+  items: Item[]
+}

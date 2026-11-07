@@ -1,64 +1,67 @@
 import sys
-from backend.src.schemas.item_photos import ItemPhotosAddSchema
-from backend.src.schemas.photos_url import PhotosUrlAddSchema
+
+import celery
+
+
+from backend.src.database import async_session_maker_null_pool
 from backend.src.services.item_photos import ItemPhotosService
-from backend.src.services.photos_url import PhotosUrlService
 from backend.src.tasks.celery_app import celery_instance
 import asyncio
 from io import BytesIO
-from asgiref.sync import async_to_sync
 
+import logging
+
+logger = logging.getLogger("CeleryTaskPhoto")
+
+from backend.src.utils.database import DBManager
 from backend.src.utils.images import process_and_upload
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+async def _delete_item_photo(photo_id: int):
+    async with DBManager(async_session_maker_null_pool) as db:
+        await ItemPhotosService(db).delete(id=photo_id)
+        await db.commit()
+
+
+class UploadSinglePhoto(celery.Task):
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        photo_id = args[1]
+        try:
+            asyncio.run(_delete_item_photo(photo_id))
+        except Exception:
+            logger.exception(f"Не удалось удалить запись о фото с id {photo_id} из бд")
 
 
 
 async def _process_single_photo(
     file_content: bytes,
-    position: int,
+    photo_id: int,
     item_id: int,
-) -> None:
-    from backend.src.utils.database import DBManager
-    from backend.src.database import get_async_session_maker
-    from backend.src.config import settings
+    ) -> None:
 
-    session_maker = get_async_session_maker(settings.DB_URL)
+    file_io = BytesIO(file_content)
 
-    async with DBManager(session_maker) as db:
-        file_io = BytesIO(file_content)
-        is_main = position == 1
-
-        photo_record = await ItemPhotosService(db).add_one(
-            ItemPhotosAddSchema(item_id=item_id, position=position, is_main=is_main)
-        )
-
-        # Параллельный ресайз + аплоад всех размеров
-        url_size_pairs = await process_and_upload(file_io, item_id, photo_record.id)
-
-        photos_url_service = PhotosUrlService(db)
-        for url, size in url_size_pairs:
-            await photos_url_service.add_one(
-                PhotosUrlAddSchema(photo_id=photo_record.id, size=size, url=url)
-            )
-
-        await db.commit()
+    # Параллельный ресайз + аплоад всех размеров
+    url_size_pairs = await process_and_upload(file_io, item_id, photo_id)
 
 
-@celery_instance.task(bind=True, max_retries=3)
-def upload_single_photo(self, file_content, position, item_id):
+
+@celery_instance.task(bind=True, base=UploadSinglePhoto, max_retries=3)
+def upload_single_photo(self, file_content, photo_id: int, item_id: int):
     try:
         asyncio.run(
-            _process_single_photo(file_content, position, item_id)
+            _process_single_photo(file_content, photo_id, item_id)
         )
     except Exception as exc:
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc, countdown=5)
+
 
 
 @celery_instance.task
-def upload_photos(files_data: list[dict], item_id: int) -> None:
-    for position, file_dict in enumerate(files_data, start=1):
-        upload_single_photo.delay(file_dict["content"], position, item_id)
+def upload_photos(files_data: list[dict], item_id: int, ids_photos: list[int]) -> None:
+    for photo_id, file_dict in zip(ids_photos, files_data):
+        upload_single_photo.delay(file_dict["content"], photo_id, item_id)
 
 

@@ -3,6 +3,7 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict
 
 from backend.src.models.bookings import StatusEnum
+from backend.src.schemas.users import RenterSchema
 
 
 class BookingsAddSchema(BaseModel):
@@ -49,3 +50,8 @@ class BookingPatchSchema(BaseModel):
     total_cost: int | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class BookingWithRenter(BookingSchema):
+     renter: RenterSchema
+

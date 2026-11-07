@@ -15,6 +15,7 @@ from backend.src.api.search import router as router_search
 from backend.src.api.bookings import router as router_bookings
 from backend.src.api.baskets import router as router_baskets
 from backend.src.api.profiles import router as router_profiles
+from backend.src.api.item_photos import router as router_photos
 from backend.src.connectors.elastic_connector import close_es_client, get_es_client
 from backend.src.connectors.rebbit_mq import broker
 from backend.src.services.search import ensure_index
@@ -58,10 +59,10 @@ app.include_router(router_search)
 app.include_router(router_bookings)
 app.include_router(router_baskets)
 app.include_router(router_profiles)
-
+app.include_router(router_photos)
 
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", reload=True)
+    uvicorn.run("main:app", reload=True, workers=5)
 

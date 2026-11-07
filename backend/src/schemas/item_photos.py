@@ -13,3 +13,11 @@ class ItemPhotosAddSchema(BaseModel):
     item_id: int
     position: int
     is_main: bool
+
+
+class ItemPhotosSchemaWithUrl(BaseModel):
+    id: int
+    item_id: int
+    position: int
+    is_main: bool
+    url: str | None = None

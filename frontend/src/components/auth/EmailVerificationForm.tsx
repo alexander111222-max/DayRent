@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { VerificationCodeInput } from '@/components/auth/VerificationCodeInput'
 import { Button, ErrorMessage } from '@/components/ui'
 import { useEmailVerification } from '@/hooks'
@@ -61,6 +61,7 @@ export function EmailVerificationForm({
     try {
       await resendCode(email)
       setCodeSent(true)
+      setCode('')
       setExpiresIn(VERIFY_CODE_TTL_SECONDS)
       setResendIn(RESEND_COOLDOWN_SECONDS)
     } catch (err) {
@@ -68,10 +69,15 @@ export function EmailVerificationForm({
     }
   }, [email, resendCode])
 
+  // Каждый вызов /resend_code генерирует новый код и перезаписывает старый в Redis,
+  // поэтому авто-отправка должна сработать ровно один раз (StrictMode вызывает эффекты дважды)
+  const autoSentRef = useRef(false)
+
   useEffect(() => {
-    if (!autoSend || codeSent) return
+    if (!autoSend || autoSentRef.current) return
+    autoSentRef.current = true
     void handleSendCode()
-  }, [autoSend, codeSent, handleSendCode])
+  }, [autoSend, handleSendCode])
 
   const handleVerify = async (event: React.FormEvent) => {
     event.preventDefault()

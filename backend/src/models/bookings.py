@@ -12,8 +12,9 @@ from backend.src.database import Base
 
 class StatusEnum(str, Enum):
     PENDING = "pending"
-    COMPLETED = "completed"
+    CONFIRMED = "confirmed"
     ACTIVE = "active"
+    COMPLETED = "completed"
     CANCELLED = "cancelled"
 
 

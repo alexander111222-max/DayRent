@@ -8,6 +8,7 @@ import {
   type ItemFormValues,
 } from '@/components/items/ItemForm'
 import { useCategories, useItems } from '@/hooks'
+import type { PendingPhotosState } from '@/hooks/useItem'
 import { ROUTES } from '@/utils/constants'
 import { getErrorMessage } from '@/utils/format'
 import { validateItemPrice } from '@/utils/validation'
@@ -44,6 +45,11 @@ export function CreateItemPage() {
 
       if (photos.length > 0) {
         await uploadPhotos({ itemId, files: photos })
+        const state: PendingPhotosState = {
+          pendingPhotos: { expected: photos.length, startedAt: Date.now() },
+        }
+        navigate(ROUTES.item(itemId), { state })
+        return
       }
 
       navigate(ROUTES.item(itemId))

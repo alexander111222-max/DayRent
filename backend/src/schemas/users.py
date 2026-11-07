@@ -90,3 +90,8 @@ class UserPatchSchema(BaseModel):
     address: str | None = None
     is_verified: bool | None = None
     
+class RenterSchema(BaseModel):
+    username: str
+    surname: str
+    phone: str
+    email: EmailStr

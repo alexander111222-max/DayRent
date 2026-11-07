@@ -53,7 +53,7 @@ async def login(data: UserLoginSchema, response: Response, db: DBDep):
     logger.info(f"Попытка входа пользователя с email: {data.email}")
     try:
         access_token = await UserService(db).login(data)
-        user = await UserService(db).get_user(email=data.email)
+        user = await UserService(db).get_user_filter_by(email=data.email)
         if not user.is_verified:
             raise HTTPException(status_code=403, detail="Email не подтвержден")
         payload = AuthService().decode_token(access_token)
@@ -129,7 +129,7 @@ async def refresh_tokens(response: Response, request: Request, db: DBDep):
 @limiter.limit("3/minute")
 async def resend_code(request: Request, data: ResendCodeEmailSchema, db: DBDep):
     try:
-        user = await UserService(db).get_user(email=data.email)
+        user = await UserService(db).get_user_filter_by(email=data.email)
     except UserNotFoundException:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     if user.is_verified:
@@ -155,7 +155,7 @@ async def resend_code(request: Request, data: ResendCodeEmailSchema, db: DBDep):
 @limiter.limit("10/minute")
 async def verify_email(request: Request, data: VerifyEmailSchema, db: DBDep):
     try:
-        user = await UserService(db).get_user(email=data.email)
+        user = await UserService(db).get_user_filter_by(email=data.email)
     except UserNotFoundException:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     if user.is_verified:

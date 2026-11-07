@@ -27,7 +27,7 @@ async def delete_user(user_id: Annotated[int, Path(ge=1, le=2147483647)], db: DB
 @router.get("/{user_id}")
 async def get_user(db: DBDep, user_id: Annotated[int, Path(ge=1, le=2147483647)], req_admin: RequireAdminDep):
     try:
-        user = await UserService(db).get_user(id=user_id)
+        user = await UserService(db).get_user_filter_by(id=user_id)
     except UserNotFoundException:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     return user

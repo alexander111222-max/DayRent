@@ -5,6 +5,7 @@ from sqlalchemy import insert, select, update, func, delete
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
 from backend.src.repositories.mappers.base import DataMapper
+from backend.src.schemas.bookings import BookingSchema
 from backend.src.utils.exceptions import ObjectNotFoundException, MultipleObjectsFoundException, \
     ObjectAlreadyExistsException
 
@@ -53,7 +54,7 @@ class BaseRepository:
 
         return [self.mapper.map_to_domain_entity(model) for model in (objs.scalars().all())]
 
-    async def get_all_by_id(self, ids: list[int]):
+    async def get_by_ids(self, ids: list[int]):
         query = select(self._model).where(self._model.id.in_(ids))
 
         objs = await self._session.execute(query)
@@ -102,6 +103,22 @@ class BaseRepository:
         obj = await self._session.execute(update_stmt)
         return self.mapper.map_to_domain_entity(obj.scalar_one_or_none())
 
+
+
+
+    async def edit_bulk(self, data: BaseModel, *filters, **filter_by):
+        update_stmt = (update(self._model)
+                       .filter(*filters)
+                       .filter_by(**filter_by)
+                       .values(**data.model_dump(exclude_unset=True))).returning(self._model)
+
+        objs = await self._session.execute(update_stmt)
+
+        return [self.mapper.map_to_domain_entity(obj) for obj in objs]
+
+
+
+
     async def delete(self, *filters, **filter_by):
         stmt = delete(self._model).filter(*filters).filter_by(**filter_by).returning(self._model)
 
@@ -114,6 +131,25 @@ class BaseRepository:
         return self.mapper.map_to_domain_entity(model)
 
 
+
+
+
+    async def add_bulk(self, data: list[BaseModel]):
+        if not data:
+            return []
+
+        try:
+            stmt = (
+                insert(self._model)
+                .values([val.model_dump() for val in data])
+                .returning(self._model)
+            )
+            rows = await self._session.execute(stmt)
+            models = rows.scalars().all()
+        except IntegrityError:
+            raise ObjectAlreadyExistsException
+
+        return [self.mapper.map_to_domain_entity(model) for model in models]
 
 
 

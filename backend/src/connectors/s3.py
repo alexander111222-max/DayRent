@@ -5,7 +5,7 @@ from aiobotocore.session import get_session
 from botocore.exceptions import ClientError
 
 from backend.src.config import settings
-
+from backend.src.utils.exceptions import ConnectS3Exception
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class AsyncS3Client:
 
         return session.create_client(
             "s3",
-            region_name="ru-central1",
+            region_name="ru-1",
             aws_access_key_id=self.access_key,
             aws_secret_access_key=self.secret_key,
             endpoint_url=self.endpoint_url,
@@ -118,6 +118,23 @@ class AsyncS3Client:
                     key
                 )
                 raise
+
+    async def get_presigned_urls(self, keys: list[str], url_ttl: int) -> dict:
+
+        async with await self._get_client() as client_s3:
+            try:
+                result = {
+                    key: await client_s3.generate_presigned_url(
+                        "get_object",
+                        Params={"Bucket": self.bucket_name, "Key": key},
+                        ExpiresIn=url_ttl,
+                    )
+                for key in keys}
+                return result
+
+            except ClientError:
+                logger.exception("Не удалось отправить запрос на получение presigned_url в s3.")
+                raise ConnectS3Exception
 
 
 s3_client = AsyncS3Client(

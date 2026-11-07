@@ -103,3 +103,10 @@ class InvalidTokenException(DayRentException):
     detail = "Невалидный токен"
 
 
+
+
+
+# S3
+
+class ConnectS3Exception(DayRentException):
+    detail = "Не удалось выполнить запрос к s3"

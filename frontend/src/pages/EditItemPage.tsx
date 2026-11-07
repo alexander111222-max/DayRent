@@ -6,7 +6,8 @@ import {
   toItemEditPayload,
   type ItemFormValues,
 } from '@/components/items/ItemForm'
-import { useCategories, useItems, useProfile } from '@/hooks'
+import { useCategories, useItem, useItems, useProfile } from '@/hooks'
+import type { PendingPhotosState } from '@/hooks/useItem'
 import { ROUTES } from '@/utils/constants'
 import { getErrorMessage } from '@/utils/format'
 import { parsePositiveIntId, validateItemPrice } from '@/utils/validation'
@@ -18,6 +19,8 @@ export function EditItemPage() {
   const { profile, isLoading: profileLoading } = useProfile()
   const { data: categories = [], isLoading: categoriesLoading } = useCategories()
   const { updateItem, deleteItem, uploadPhotos, isUpdating, isDeleting, isUploadingPhotos } = useItems()
+  // Нужен текущий счётчик фото, чтобы после загрузки знать, сколько их ждать на странице вещи
+  const { data: itemWithPhotos } = useItem(itemId ?? 0)
   const [values, setValues] = useState<ItemFormValues | null>(null)
   const [photos, setPhotos] = useState<File[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +58,13 @@ export function EditItemPage() {
       await updateItem({ itemId, data: toItemEditPayload(values) })
 
       if (photos.length > 0) {
+        const currentPhotosCount = itemWithPhotos?.photos_urls?.length ?? 0
         await uploadPhotos({ itemId, files: photos })
+        const state: PendingPhotosState = {
+          pendingPhotos: { expected: currentPhotosCount + photos.length, startedAt: Date.now() },
+        }
+        navigate(ROUTES.item(itemId), { state })
+        return
       }
 
       navigate(ROUTES.item(itemId))

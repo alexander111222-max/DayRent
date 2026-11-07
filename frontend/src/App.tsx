@@ -1,17 +1,9 @@
 import { useEffect } from 'react'
 import { RouterProvider } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from '@/api/queryClient'
 import { router } from '@/routes'
 import { useAuthStore } from '@/store/authStore'
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-})
 
 function AppBootstrap() {
   const checkSession = useAuthStore((state) => state.checkSession)

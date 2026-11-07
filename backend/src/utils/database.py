@@ -3,7 +3,6 @@ from backend.src.repositories.bookings import BookingsRepository
 from backend.src.repositories.categories import CategoriesRepository
 from backend.src.repositories.item_photos import ItemPhotosRepository
 from backend.src.repositories.items import ItemRepository
-from backend.src.repositories.photos_url import PhotosUrlRepository
 from backend.src.repositories.refresh_tokens import RefreshTokensRepository
 from backend.src.repositories.users import UserRepository
 
@@ -19,7 +18,6 @@ class DBManager:
         self.users = UserRepository(self.session)
         self.items = ItemRepository(self.session)
         self.item_photos = ItemPhotosRepository(self.session)
-        self.photos_url = PhotosUrlRepository(self.session)
         self.categories = CategoriesRepository(self.session)
         self.bookings = BookingsRepository(self.session)
         self.baskets = BasketsRepository(self.session)

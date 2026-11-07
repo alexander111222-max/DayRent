@@ -15,4 +15,16 @@ export const profilesApi = {
 
   getPendingBookings: () =>
     apiClient.get<Booking[]>('/profile/pending').then((r) => r.data),
+
+  // Мои брони, которые владелец подтвердил, но аренда ещё не началась
+  getConfirmedBookings: () =>
+    apiClient.get<Booking[]>('/profile/confirmed').then((r) => r.data),
+
+  // Брони на вещи пользователя, которые он как владелец должен подтвердить
+  getOwnerPendingBookings: () =>
+    apiClient.get<Booking[]>('/profile/pending_owners').then((r) => r.data),
+
+  // Подтверждённые брони на вещи пользователя, которые скоро начнутся
+  getOwnerConfirmedBookings: () =>
+    apiClient.get<Booking[]>('/profile/confirmed_owners').then((r) => r.data),
 }

@@ -69,13 +69,22 @@ class UserService(BaseService):
         token = AuthService().create_token({"user_id": user.id, "role": "user", "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.TTL)})
         return token
 
-    async def get_user(self, **filter_by):
+    async def get_user_filter_by(self, *filters, **filter_by):
 
         try:
-            user = await self._db.users.get_one(**filter_by)
+            user = await self._db.users.get_filter_by(*filters, **filter_by)
+            user = user[0]
         except ObjectNotFoundException:
             raise UserNotFoundException
         return user
+
+    async def get_users_filter_by(self, *filters, **filter_by):
+
+        try:
+            users = await self._db.users.get_filter_by(*filters, **filter_by)
+        except ObjectNotFoundException:
+            raise UserNotFoundException
+        return users
 
     async def update_coordinates(self, user_id: int, lat: float, lon: float):
         coor_user = CoordinateUser(

@@ -10,4 +10,4 @@ cfg = Config("alembic.ini")
 # МЫ ЖЕСТКО ПРОПИСЫВАЕМ ПУТЬ ТУТ:
 cfg.set_main_option("script_location", "backend/src/migrations")
 
-command.revision(cfg, message="add new constraint to user[email] - unique", autogenerate=True)
+command.revision(cfg, message="added: new field in StatusEnum - type booking", autogenerate=True)

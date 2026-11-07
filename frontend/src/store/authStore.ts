@@ -1,6 +1,12 @@
 import { create } from 'zustand'
-import { authApi, profilesApi } from '@/api'
+import { authApi } from '@/api'
+import { profileQueryOptions, queryClient } from '@/api/queryClient'
 import type { User } from '@/types'
+
+// Профиль грузим через кэш react-query, чтобы useProfile не делал второй запрос.
+// staleTime: 0 — проверка сессии всегда идёт на сервер (одновременные вызовы дедуплицируются)
+const fetchProfileQuery = () =>
+  queryClient.fetchQuery({ ...profileQueryOptions, staleTime: 0, retry: false })
 
 interface AuthState {
   user: User | null
@@ -31,7 +37,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: true })
 
       try {
-        const profile = await profilesApi.get()
+        const profile = await fetchProfileQuery()
         set({
           user: profile.user,
           isAuthenticated: true,
@@ -41,7 +47,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } catch {
         try {
           await authApi.refresh()
-          const profile = await profilesApi.get()
+          const profile = await fetchProfileQuery()
           set({
             user: profile.user,
             isAuthenticated: true,

@@ -1,25 +1,27 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { BookingForm } from '@/components/bookings/BookingForm'
-import { Button, Card, ErrorMessage, Loader } from '@/components/ui'
-import { useAuth, useBasket, useBookings, useItem } from '@/hooks'
+import { ItemGallery } from '@/components/items/ItemGallery'
+import { BasketButton } from '@/components/items/BasketButton'
+import { Button, Card, Loader } from '@/components/ui'
+import { useAuth, useBookings, useItem } from '@/hooks'
+import type { PendingPhotosState } from '@/hooks/useItem'
 import { ROUTES } from '@/utils/constants'
-import { formatPrice, getErrorMessage } from '@/utils/format'
+import { formatPrice } from '@/utils/format'
 import { parsePositiveIntId } from '@/utils/validation'
 
 export function ItemDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams()
   const itemId = parsePositiveIntId(id)
-  const { data: item, isLoading, isError } = useItem(itemId ?? 0)
+  const location = useLocation()
+  const pendingPhotos = (location.state as PendingPhotosState | null)?.pendingPhotos
+  const { data: item, isLoading, isError, isPhotosProcessing } = useItem(itemId ?? 0, pendingPhotos)
   const { isAuthenticated, user } = useAuth()
   const { createBooking, isCreating } = useBookings()
-  const { basket, addToBasket, removeFromBasket, isAdding, isRemoving } = useBasket()
   const [bookingSuccess, setBookingSuccess] = useState(false)
-  const [actionError, setActionError] = useState<string | null>(null)
 
   const isOwner = user?.id === item?.user_id
-  const inBasket = itemId ? basket.some((entry) => entry.item_id === itemId) : false
 
   const handleBooking = async (payload: {
     date_from: string
@@ -31,22 +33,6 @@ export function ItemDetailPage() {
     await createBooking(payload)
     setBookingSuccess(true)
     navigate(ROUTES.bookings)
-  }
-
-  const handleBasketToggle = async () => {
-    if (!itemId) return
-
-    setActionError(null)
-
-    try {
-      if (inBasket) {
-        await removeFromBasket(itemId)
-      } else {
-        await addToBasket(itemId)
-      }
-    } catch (err) {
-      setActionError(getErrorMessage(err, 'Не удалось обновить избранное'))
-    }
   }
 
   if (!itemId) {
@@ -86,20 +72,30 @@ export function ItemDetailPage() {
   return (
     <div className="page-container grid gap-6 lg:grid-cols-[2fr_1fr]">
       <Card>
-        <div className="mb-6 flex h-64 items-center justify-center rounded-xl bg-gradient-to-br from-brand-100 to-brand-200 text-6xl">
-          📦
-        </div>
+        <ItemGallery photos={item.photos_urls ?? []} alt={item.title} />
+        {isPhotosProcessing && (
+          <p className="mb-4 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
+            Фото обрабатываются, появятся через несколько секунд...
+          </p>
+        )}
         <h1 className="text-2xl font-bold text-slate-900">{item.title}</h1>
         <p className="mt-2 text-slate-600">{item.description}</p>
         <p className="mt-4 text-sm text-slate-500">
           {item.city}, {item.address}
         </p>
         {isOwner && (
-          <Link to={ROUTES.itemEdit(item.id)} className="mt-4 inline-block">
-            <Button variant="secondary" size="sm">
-              Редактировать
-            </Button>
-          </Link>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link to={ROUTES.itemBookings(item.id)}>
+              <Button variant="accent" size="sm">
+                📅 Календарь броней
+              </Button>
+            </Link>
+            <Link to={ROUTES.itemEdit(item.id)}>
+              <Button variant="secondary" size="sm">
+                Редактировать
+              </Button>
+            </Link>
+          </div>
         )}
       </Card>
 
@@ -109,7 +105,6 @@ export function ItemDetailPage() {
           <p className="text-3xl font-bold text-brand-700">{formatPrice(item.price)}</p>
         </div>
 
-        {actionError && <ErrorMessage message={actionError} />}
         {bookingSuccess && (
           <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
             Бронь создана. Перенаправляем...
@@ -121,21 +116,14 @@ export function ItemDetailPage() {
             <Link to={ROUTES.login} className="font-medium text-brand-700 hover:underline">
               Войдите
             </Link>
-            , чтобы забронировать или добавить в избранное.
+            , чтобы забронировать или добавить в корзину.
           </p>
         )}
 
         {isAuthenticated && !isOwner && (
           <>
             <BookingForm item={item} onSubmit={handleBooking} isSubmitting={isCreating} />
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={handleBasketToggle}
-              isLoading={isAdding || isRemoving}
-            >
-              {inBasket ? 'Убрать из избранного' : 'В избранное'}
-            </Button>
+            <BasketButton item={item} size="md" />
           </>
         )}
 

@@ -2,10 +2,10 @@ import { APP_NAME } from '@/utils/constants'
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-slate-200 bg-white">
-      <div className="page-container flex flex-col gap-2 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+    <footer className="mt-auto bg-linear-to-r from-violet-950 via-fuchsia-950 to-slate-900 text-white">
+      <div className="page-container flex flex-col gap-2 py-6 text-sm text-violet-200 sm:flex-row sm:items-center sm:justify-between">
         <p>© {new Date().getFullYear()} {APP_NAME}. Аренда вещей на каждый день.</p>
-        <p>Backend API + React frontend</p>
+        <p>Сделано с 💜 для тех, кто делится вещами</p>
       </div>
     </footer>
   )

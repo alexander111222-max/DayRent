@@ -16,9 +16,10 @@ export function useItems() {
   const updateMutation = useMutation({
     mutationFn: ({ itemId, data }: { itemId: number; data: ItemEditRequest }) =>
       itemsApi.update(itemId, data),
-    onSuccess: () => {
+    onSuccess: (_data, { itemId }) => {
       queryClient.invalidateQueries({ queryKey: ['profile'] })
       queryClient.invalidateQueries({ queryKey: ['search'] })
+      queryClient.invalidateQueries({ queryKey: ['item', itemId] })
     },
   })
 
@@ -33,6 +34,10 @@ export function useItems() {
   const uploadPhotosMutation = useMutation({
     mutationFn: ({ itemId, files }: { itemId: number; files: File[] }) =>
       itemsApi.uploadPhotos(itemId, files),
+    onSuccess: (_data, { itemId }) => {
+      queryClient.invalidateQueries({ queryKey: ['item', itemId] })
+      queryClient.invalidateQueries({ queryKey: ['search'] })
+    },
   })
 
   return {
